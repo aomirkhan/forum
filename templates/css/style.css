@@ -1,0 +1,22 @@
+.container{
+    display: flex;
+    height: 7vh; 
+    text-align: center;
+    background-color: gray;
+}
+.forumname{
+    position: relative;
+    left: 13%;
+    top:11px
+}
+.login{
+    position: relative;
+    left :95% ; 
+    top: 30%;
+}
+
+.signup{
+    position: relative;
+    left :96% ; 
+    top:30%;
+}

@@ -13,7 +13,7 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 	}
-	tmpl, err := template.ParseFiles("./templates/home.html")
+	tmpl, err := template.ParseFiles("./home.html")
 	if err != nil {
 		log.Println(err.Error())
 		return
