@@ -54,7 +54,7 @@ func SignUpConfirmation(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("UserPassword")
 	rewrittenPassword := r.FormValue("UserRewrittenPassword")
 
-	result, _ := ConfirmSignUp(name, email, password, rewrittenPassword)
+	result, _ := ConfirmSignup(name, email, password, rewrittenPassword)
 	if result == true {
 		tmpl, err := template.ParseFiles("./ui/html/signin.html")
 		if err != nil {
@@ -93,5 +93,18 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
 		return
+	}
+	name := r.FormValue("UserName")
+	password := r.FormValue("UserPassword")
+	result, _ := ConfirmSignin(name, password)
+	if result == true {
+		// Все что после логина происходит
+	} else {
+		tmpl, err := template.ParseFiles("./ui/html/signin.html")
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		tmpl.Execute(w, nil)
 	}
 }
