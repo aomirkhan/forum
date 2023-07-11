@@ -1,9 +1,13 @@
 package internal
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"text/template"
+
+	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func Homepage(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +60,14 @@ func SignUpConfirmation(w http.ResponseWriter, r *http.Request) {
 
 	result, _ := ConfirmSignup(name, email, password, rewrittenPassword)
 	if result == true {
+		db, err := sql.Open("sqlite3", "./sql/database.db")
+		if err != nil {
+			log.Fatal(err)
+		}
+		cost, err := bcrypt.Cost([]byte(password))
+		pwd, err := bcrypt.GenerateFromPassword([]byte(password), cost)
+		AddUser(name, email, string(pwd), db)
+		defer db.Close()
 		tmpl, err := template.ParseFiles("./ui/html/signin.html")
 		if err != nil {
 			log.Println(err.Error())
@@ -107,4 +119,19 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 		}
 		tmpl.Execute(w, nil)
 	}
+}
+
+func Menu(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		return
+	}
+	tmpl, err := template.ParseFiles("./ui/html/signin.html")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	tmpl.Execute(w, nil)
 }
