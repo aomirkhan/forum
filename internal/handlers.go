@@ -58,7 +58,7 @@ func SignUpConfirmation(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("UserPassword")
 	rewrittenPassword := r.FormValue("UserRewrittenPassword")
 
-	result, _ := ConfirmSignup(name, email, password, rewrittenPassword)
+	result, text := ConfirmSignup(name, email, password, rewrittenPassword)
 	if result == true {
 		db, err := sql.Open("sqlite3", "./sql/database.db")
 		if err != nil {
@@ -80,7 +80,7 @@ func SignUpConfirmation(w http.ResponseWriter, r *http.Request) {
 			log.Println(err.Error())
 			return
 		}
-		tmpl.Execute(w, nil)
+		tmpl.Execute(w, text)
 	}
 }
 
@@ -110,7 +110,7 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("UserPassword")
 	result, _ := ConfirmSignin(name, password)
 	if result == true {
-		// Все что после логина происходит
+		// Все что после логина происходит тут
 	} else {
 		tmpl, err := template.ParseFiles("./ui/html/signin.html")
 		if err != nil {
@@ -121,7 +121,7 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Menu(w http.ResponseWriter, r *http.Request) {
+func Feed(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		w.WriteHeader(http.StatusMethodNotAllowed)

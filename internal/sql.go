@@ -6,7 +6,7 @@ import (
 )
 
 func AddUser(UserName string, Email string, hashedPassword string, database *sql.DB) {
-	db, err := sql.Open("sqlite3", "./example.db")
+	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
 		log.Fatal(err)
 	}
