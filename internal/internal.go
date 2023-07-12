@@ -9,6 +9,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var nameuser chan string
+
 func ConfirmSignup(Name string, Email string, Password string, RewrittenPassword string) (bool, string) {
 	if RewrittenPassword != Password {
 		return false, "Passwords don't match, write again."

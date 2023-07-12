@@ -4,10 +4,16 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"sync"
 	"text/template"
 
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	gg    sync.Mutex
+	name1 string
 )
 
 func Homepage(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +111,7 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("UserPassword")
 	result, text := ConfirmSignin(name, password)
 	if result == true {
-		http.Redirect(w, r, "/", 302)
+		// http.Redirect(w, r.WithContext(context.WithValue(r.Context(), "Azaloh", name)), "/", 302)
 	} else {
 		tmpl, err := template.ParseFiles("./ui/html/signin.html")
 		if err != nil {
@@ -138,6 +144,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
 		return
 	}
+
 	tmpl, err := template.ParseFiles("./ui/html/create.html")
 	if err != nil {
 		log.Println(err.Error())
@@ -146,4 +153,16 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, nil)
 }
 
-func PostConfirmation
+func PostConfirmation(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		return
+	}
+	text := r.FormValue("convert")
+	cat := r.FormValue("cars")
+
+	CreatePost(name1, text, cat)
+	http.Redirect(w, r, "/", 302)
+}
