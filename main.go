@@ -16,6 +16,7 @@ func main() {
 	mux.HandleFunc("/signin", internal.SignIn)
 	mux.HandleFunc("/signupconfirmation", internal.SignUpConfirmation)
 	mux.HandleFunc("/signinconfirmation", internal.SignInConfirmation)
+	mux.HandleFunc("/create", internal.Create)
 	mux.HandleFunc("/feed", internal.Feed)
 	fmt.Println("http://127.0.0.1:8000")
 	http.ListenAndServe(":8000", mux)

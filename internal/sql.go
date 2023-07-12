@@ -23,3 +23,22 @@ func AddUser(UserName string, Email string, hashedPassword string, database *sql
 
 	defer db.Close()
 }
+
+func CreatePost(name string, text string, category string) {
+	db, err := sql.Open("sqlite3", "./sql/database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS posts (Name VARCHAN(30), PostText VARCHAN(2000), Category VARCHAN(45))")
+	if err != nil {
+		log.Fatal(err)
+	}
+	statement.Exec()
+	statement, err = db.Prepare("INSERT INTO posts (Name, PostText,Category) VALUES (?, ?, ?)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	statement.Exec(name, text, category)
+
+	defer db.Close()
+}

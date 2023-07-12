@@ -135,3 +135,18 @@ func Feed(w http.ResponseWriter, r *http.Request) {
 	}
 	tmpl.Execute(w, nil)
 }
+
+func Create(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		return
+	}
+	tmpl, err := template.ParseFiles("./ui/html/create.html")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	tmpl.Execute(w, nil)
+}
