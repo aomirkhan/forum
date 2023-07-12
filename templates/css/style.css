@@ -11,12 +11,17 @@
 }
 .login{
     position: relative;
-    left :95% ; 
+    left:6000% ; 
     top: 30%;
 }
 
 .signup{
     position: relative;
-    left :96% ; 
-    top:30%;
+    left :6000% ; 
+    top:35%;
+}
+.Username{
+    position: relative;
+    left: 95%;
+    top: 35%;
 }

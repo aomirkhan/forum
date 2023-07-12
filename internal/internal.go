@@ -70,6 +70,7 @@ func ConfirmSignin(Name string, Password string) (bool, string) {
 		rows.Scan(&name, &password)
 		if name == Name {
 			if bcrypt.CompareHashAndPassword([]byte(password), []byte(Password)) == nil {
+				Name1 = name
 				return true, "OK"
 			} else {
 				return false, "Nepravilnyi porol"

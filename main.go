@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+	internal.ToStart()
 	mux := http.NewServeMux()
 	files := http.FileServer(http.Dir("./templates"))
 	mux.Handle("/templates/", http.StripPrefix("/templates", files))
@@ -14,6 +15,7 @@ func main() {
 	mux.HandleFunc("/", internal.Homepage)
 	mux.HandleFunc("/signup", internal.SignUp)
 	mux.HandleFunc("/signin", internal.SignIn)
+	mux.HandleFunc("/logout", internal.Logout)
 	mux.HandleFunc("/signupconfirmation", internal.SignUpConfirmation)
 	mux.HandleFunc("/signinconfirmation", internal.SignInConfirmation)
 	mux.HandleFunc("/create", internal.Create)

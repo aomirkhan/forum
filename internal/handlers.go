@@ -3,20 +3,19 @@ package internal
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
-	"sync"
 	"text/template"
 
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var (
-	gg    sync.Mutex
-	name1 string
-)
+var Name1 string
+
+func ToStart() {
+	Name1 = ""
+}
 
 func Homepage(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -24,21 +23,35 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-	myValue := r.Context().Value("myKey").(string)
-	fmt.Println(string(myValue))
-
-	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
-		return
+	if Name1 == "" {
+		if r.Method != http.MethodGet {
+			w.Header().Set("Allow", http.MethodGet)
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+			return
+		}
+		files := []string{
+			"./ui/html/home.page.tmpl",
+			"./ui/html/base.layout.tmpl",
+		}
+		tmpl, err := template.ParseFiles(files...)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		tmpl.Execute(w, nil)
+	} else {
+		files := []string{
+			"./ui/html/user.home.tmpl",
+			"./ui/html/base.layout.tmpl",
+		}
+		tmpl, err := template.ParseFiles(files...)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		tmpl.Execute(w, Name1)
 	}
-	tmpl, err := template.ParseFiles("./ui/html/home.html")
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-	tmpl.Execute(w, nil)
 }
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
@@ -169,6 +182,11 @@ func PostConfirmation(w http.ResponseWriter, r *http.Request) {
 	text := r.FormValue("convert")
 	cat := r.FormValue("cars")
 
-	CreatePost(name1, text, cat)
+	CreatePost(Name1, text, cat)
+	http.Redirect(w, r, "/", 302)
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
+	ToStart()
 	http.Redirect(w, r, "/", 302)
 }
