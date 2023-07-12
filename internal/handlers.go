@@ -68,12 +68,7 @@ func SignUpConfirmation(w http.ResponseWriter, r *http.Request) {
 		pwd, err := bcrypt.GenerateFromPassword([]byte(password), cost)
 		AddUser(name, email, string(pwd), db)
 		defer db.Close()
-		tmpl, err := template.ParseFiles("./ui/html/signin.html")
-		if err != nil {
-			log.Println(err.Error())
-			return
-		}
-		tmpl.Execute(w, nil)
+		http.Redirect(w, r, "/signin", 302)
 	} else {
 		tmpl, err := template.ParseFiles("./ui/html/signup.html")
 		if err != nil {
@@ -108,16 +103,16 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 	}
 	name := r.FormValue("UserName")
 	password := r.FormValue("UserPassword")
-	result, _ := ConfirmSignin(name, password)
+	result, text := ConfirmSignin(name, password)
 	if result == true {
-		// Все что после логина происходит тут
+		http.Redirect(w, r, "/", 302)
 	} else {
 		tmpl, err := template.ParseFiles("./ui/html/signin.html")
 		if err != nil {
 			log.Println(err.Error())
 			return
 		}
-		tmpl.Execute(w, nil)
+		tmpl.Execute(w, text)
 	}
 }
 
@@ -150,3 +145,5 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	tmpl.Execute(w, nil)
 }
+
+func PostConfirmation

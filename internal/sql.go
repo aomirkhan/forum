@@ -29,7 +29,7 @@ func CreatePost(name string, text string, category string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS posts (Name VARCHAN(30), PostText VARCHAN(2000), Category VARCHAN(45))")
+	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS posts (Name VARCHAN(30) PRIMARY KEY, PostText VARCHAN(2000), Category VARCHAN(45))")
 	if err != nil {
 		log.Fatal(err)
 	}
