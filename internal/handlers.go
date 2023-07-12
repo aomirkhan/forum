@@ -1,7 +1,9 @@
 package internal
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -22,6 +24,9 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+	myValue := r.Context().Value("myKey").(string)
+	fmt.Println(string(myValue))
+
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -111,7 +116,8 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("UserPassword")
 	result, text := ConfirmSignin(name, password)
 	if result == true {
-		// http.Redirect(w, r.WithContext(context.WithValue(r.Context(), "Azaloh", name)), "/", 302)
+		ctx := context.WithValue(r.Context(), "myKey", "aza")
+		http.Redirect(w, r.WithContext(ctx), "/", 302)
 	} else {
 		tmpl, err := template.ParseFiles("./ui/html/signin.html")
 		if err != nil {
