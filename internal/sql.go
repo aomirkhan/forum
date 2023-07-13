@@ -2,6 +2,7 @@ package internal
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 )
 
@@ -19,6 +20,7 @@ func AddUser(UserName string, Email string, hashedPassword string, database *sql
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(UserName, Email, hashedPassword)
 	statement.Exec(UserName, Email, hashedPassword)
 
 	defer db.Close()

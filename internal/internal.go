@@ -75,11 +75,9 @@ func ConfirmSignin(Name string, Password string) (bool, string) {
 			} else {
 				return false, "Nepravilnyi porol"
 			}
-		} else {
-			return false, "User does not exist"
 		}
 	}
-	return true, "OK"
+	return false, "User does not exist"
 }
 
 func isEmailValid(e string) bool {

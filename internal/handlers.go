@@ -1,11 +1,11 @@
 package internal
 
 import (
-	"context"
 	"database/sql"
 	"log"
 	"net/http"
 	"text/template"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
@@ -18,6 +18,15 @@ func ToStart() {
 }
 
 func Homepage(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("logged-in")
+	if err == http.ErrNoCookie {
+		cookie = &http.Cookie{
+			Name:  "logged-in",
+			Value: "0",
+		}
+		http.SetCookie(w, cookie)
+	}
+
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 
@@ -129,8 +138,9 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("UserPassword")
 	result, text := ConfirmSignin(name, password)
 	if result == true {
-		ctx := context.WithValue(r.Context(), "myKey", "aza")
-		http.Redirect(w, r.WithContext(ctx), "/", 302)
+		cookie := &http.Cookie{Name: "logged-in", Value: "1", Expires: time.Now().Add(365 * 24 * time.Hour)}
+		http.SetCookie(w, cookie)
+		http.Redirect(w, r, "/", 302)
 	} else {
 		tmpl, err := template.ParseFiles("./ui/html/signin.html")
 		if err != nil {
@@ -188,5 +198,10 @@ func PostConfirmation(w http.ResponseWriter, r *http.Request) {
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 	ToStart()
+	cookie := &http.Cookie{
+		Name:  "logged-in",
+		Value: "0",
+	}
+	http.SetCookie(w, cookie)
 	http.Redirect(w, r, "/", 302)
 }
