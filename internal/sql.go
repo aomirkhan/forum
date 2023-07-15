@@ -27,7 +27,7 @@ func AddUser(UserName string, Email string, hashedPassword string, database *sql
 }
 
 func CreatePost(name string, text string, category string) {
-	db, err := sql.Open("sqlite3", "./sql/database.db")
+	db, err := sql.Open("sqlite3", "./sql/dbase.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,4 +43,22 @@ func CreatePost(name string, text string, category string) {
 	statement.Exec(name, text, category)
 
 	defer db.Close()
+}
+
+func CreateSession(id, name string) {
+	db, err := sql.Open("sqlite3", "./sql/database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS sessions (Id VARCHAR(37) PRIMARY KEY, Name VARCHAR(30))")
+	if err != nil {
+		log.Fatal(err)
+	}
+	statement.Exec()
+	statement, err = db.Prepare("INSERT INTO sessions (Id,Name) VALUES (?,?)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	statement.Exec(id, name)
+	db.Close()
 }

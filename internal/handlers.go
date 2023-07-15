@@ -2,11 +2,13 @@ package internal
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"text/template"
 	"time"
 
+	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -22,7 +24,7 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 	if err == http.ErrNoCookie {
 		cookie = &http.Cookie{
 			Name:  "logged-in",
-			Value: "0",
+			Value: "not-logged",
 		}
 		http.SetCookie(w, cookie)
 	}
@@ -59,6 +61,8 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 			log.Println(err.Error())
 			return
 		}
+		fmt.Println(cookie.Value)
+
 		tmpl.Execute(w, Name1)
 	}
 }
@@ -138,7 +142,14 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("UserPassword")
 	result, text := ConfirmSignin(name, password)
 	if result == true {
-		cookie := &http.Cookie{Name: "logged-in", Value: "1", Expires: time.Now().Add(365 * 24 * time.Hour)}
+		u1, err := uuid.NewV4()
+		if err != nil {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		u2 := uuid.NewV3(u1, name).String()
+		CreateSession(u2, name)
+		cookie := &http.Cookie{Name: "logged-in", Value: u2, Expires: time.Now().Add(365 * 24 * time.Hour)}
 		http.SetCookie(w, cookie)
 		http.Redirect(w, r, "/", 302)
 	} else {
