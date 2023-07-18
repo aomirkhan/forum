@@ -13,34 +13,27 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var Name1 string
-
-func ToStart() {
-	Name1 = ""
-}
-
 func Homepage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		return
+	}
 	cookie, err := r.Cookie("logged-in")
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+
+		return
+	}
+
 	if err == http.ErrNoCookie {
 		cookie = &http.Cookie{
 			Name:  "logged-in",
 			Value: "not-logged",
 		}
 		http.SetCookie(w, cookie)
-	}
 
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-
-		return
-	}
-	if Name1 == "" {
-		if r.Method != http.MethodGet {
-			w.Header().Set("Allow", http.MethodGet)
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
-			return
-		}
 		files := []string{
 			"./ui/html/home.page.tmpl",
 			"./ui/html/base.layout.tmpl",
@@ -51,7 +44,19 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		tmpl.Execute(w, nil)
+	} else if err != nil {
+		log.Fatal(err)
 	} else {
+		c := cookie.Value
+		fmt.Print(c)
+		db, err := sql.Open("sqlite3", "./sql/database.db")
+		var name string
+
+		Name, err := db.Query(fmt.Sprintf("SELECT Name FROM cookies WHERE Id =%s", c))
+		if err != nil {
+			log.Fatal(err)
+		}
+		Name.Scan(&name)
 		files := []string{
 			"./ui/html/user.home.tmpl",
 			"./ui/html/base.layout.tmpl",
@@ -63,9 +68,55 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Println(cookie.Value)
 
-		tmpl.Execute(w, Name1)
+		tmpl.Execute(w, name)
 	}
 }
+
+// 	if err != nil {
+
+// 		log.Fatal(err)
+// 		return
+// 	}
+// 	var name string
+// 	Name.Scan(&name)
+
+// 	if r.URL.Path != "/" {
+// 		http.NotFound(w, r)
+
+// 		return
+// 	}
+// 	if name == "" {
+// 		if r.Method != http.MethodGet {
+// 			w.Header().Set("Allow", http.MethodGet)
+// 			w.WriteHeader(http.StatusMethodNotAllowed)
+// 			w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+// 			return
+// 		}
+// 		files := []string{
+// 			"./ui/html/home.page.tmpl",
+// 			"./ui/html/base.layout.tmpl",
+// 		}
+// 		tmpl, err := template.ParseFiles(files...)
+// 		if err != nil {
+// 			log.Println(err.Error())
+// 			return
+// 		}
+// 		tmpl.Execute(w, nil)
+// 	} else {
+// 		files := []string{
+// 			"./ui/html/user.home.tmpl",
+// 			"./ui/html/base.layout.tmpl",
+// 		}
+// 		tmpl, err := template.ParseFiles(files...)
+// 		if err != nil {
+// 			log.Println(err.Error())
+// 			return
+// 		}
+// 		fmt.Println(cookie.Value)
+
+// 		tmpl.Execute(w, name)
+// 	}
+// }
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -97,14 +148,17 @@ func SignUpConfirmation(w http.ResponseWriter, r *http.Request) {
 
 	result, text := ConfirmSignup(name, email, password, rewrittenPassword)
 	if result == true {
-		db, err := sql.Open("sqlite3", "./sql/database.db")
+
+		cost, err := bcrypt.Cost([]byte(password))
 		if err != nil {
 			log.Fatal(err)
 		}
-		cost, err := bcrypt.Cost([]byte(password))
 		pwd, err := bcrypt.GenerateFromPassword([]byte(password), cost)
-		AddUser(name, email, string(pwd), db)
-		defer db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+		AddUser(name, email, string(pwd))
+
 		http.Redirect(w, r, "/signin", 302)
 	} else {
 		tmpl, err := template.ParseFiles("./ui/html/signup.html")
@@ -148,7 +202,9 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		u2 := uuid.NewV3(u1, name).String()
+
 		CreateSession(u2, name)
+
 		cookie := &http.Cookie{Name: "logged-in", Value: u2, Expires: time.Now().Add(365 * 24 * time.Hour)}
 		http.SetCookie(w, cookie)
 		http.Redirect(w, r, "/", 302)
@@ -200,15 +256,14 @@ func PostConfirmation(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
 		return
 	}
-	text := r.FormValue("convert")
-	cat := r.FormValue("cars")
+	// text := r.FormValue("convert")
+	// cat := r.FormValue("cars")
 
-	CreatePost(Name1, text, cat)
+	// CreatePost(Name1, text, cat)
 	http.Redirect(w, r, "/", 302)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	ToStart()
 	cookie := &http.Cookie{
 		Name:  "logged-in",
 		Value: "0",
