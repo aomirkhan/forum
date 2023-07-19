@@ -206,17 +206,12 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		u2 := uuid.NewV3(u1, name).String()
-<<<<<<< HEAD
 		db, err := sql.Open("sqlite3", "./sql/database.db")
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer db.Close()
 		CreateSession(u2, name, db)
-=======
-
-		CreateSession(u2, name)
->>>>>>> 8fac8fc7949bd0ea620901da793fc5fa77172573
 
 		cookie := &http.Cookie{Name: "logged-in", Value: u2, Expires: time.Now().Add(365 * 24 * time.Hour)}
 		http.SetCookie(w, cookie)
@@ -277,7 +272,6 @@ func PostConfirmation(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-<<<<<<< HEAD
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
 		log.Fatal(err)
@@ -285,9 +279,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("logged-in")
 	DeleteCookie(cookie.Value, db)
 	cookie = &http.Cookie{
-=======
-	cookie := &http.Cookie{
->>>>>>> 8fac8fc7949bd0ea620901da793fc5fa77172573
 		Name:  "logged-in",
 		Value: "not-logged",
 	}
