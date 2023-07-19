@@ -1,10 +1,24 @@
 {{template "base" .}} 
 {{define "title"}}
 <div class = "Username">
-{{.}}
 <br>
 <form action="/logout">
         <button >logout</button>
 </form>
 </div>
 {{end}}
+{{define "main"}}
+<div class="container1">
+        {{range .}}
+        <div class="box" >
+            <h2> {{.Name}} </h2>
+          <p1>{{.Text}}</p2>
+            <p2>{{.Category}}</p2>
+        </div>
+        <br>
+       {{end}}
+       
+    </div>
+    {{end}}
+
+

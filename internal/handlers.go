@@ -38,12 +38,13 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 			"./ui/html/home.page.tmpl",
 			"./ui/html/base.layout.tmpl",
 		}
+
 		tmpl, err := template.ParseFiles(files...)
 		if err != nil {
 			log.Println(err.Error())
 			return
 		}
-		tmpl.Execute(w, nil)
+		tmpl.Execute(w, ShowPost())
 	} else if err != nil {
 		log.Fatal(err)
 	} else {
@@ -71,7 +72,7 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		db.Close()
-		tmpl.Execute(w, name)
+		tmpl.Execute(w, ShowPost())
 
 	}
 }
@@ -226,21 +227,6 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Feed(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
-		return
-	}
-	tmpl, err := template.ParseFiles("./ui/html/signin.html")
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-	tmpl.Execute(w, nil)
-}
-
 func Create(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
@@ -264,10 +250,13 @@ func PostConfirmation(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
 		return
 	}
-	// text := r.FormValue("convert")
-	// cat := r.FormValue("cars")
-
-	// CreatePost(Name1, text, cat)
+	text := r.FormValue("convert")
+	cat := r.FormValue("cars")
+	cookie, err := r.Cookie("logged-in")
+	if err != nil {
+		log.Fatal(err)
+	}
+	CreatePost(cookie.Value, text, cat)
 	http.Redirect(w, r, "/", 302)
 }
 

@@ -18,13 +18,30 @@ func AddUser(UserName string, Email string, hashedPassword string, db *sql.DB) {
 	db.Close()
 }
 
-func CreatePost(name string, text string, category string, db *sql.DB) {
-	statement, err := db.Prepare("INSERT INTO posts (Name, PostText,Category) VALUES (?, ?, ?)")
+func CreatePost(cookie string, text string, category string) {
+	db, err := sql.Open("sqlite3", "./sql/database.db")
+	Name, err := db.Query("SELECT lame FROM cookies WHERE Id = ( ? )", cookie)
 	if err != nil {
 		log.Fatal(err)
 	}
-	statement.Exec(name, text, category)
+	defer Name.Close()
+	var name string
+	for Name.Next() {
+		Name.Scan(&name)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	_, err = db.Exec("INSERT INTO posts (Post,Namae,Category) VALUES (?, ?, ?)", text, name, category)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tx.Commit()
 	db.Close()
 }
 
