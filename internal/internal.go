@@ -44,6 +44,7 @@ func ConfirmSignup(Name string, Email string, Password string, RewrittenPassword
 		}
 		var name string
 		var email string
+		defer rows.Close()
 		for rows.Next() {
 			rows.Scan(&name, &email)
 			if name == Name {
@@ -52,6 +53,7 @@ func ConfirmSignup(Name string, Email string, Password string, RewrittenPassword
 				return false, "That Email is already being used"
 			}
 		}
+
 	}
 
 	return true, "OK"
@@ -66,6 +68,7 @@ func ConfirmSignin(Name string, Password string) (bool, string) {
 	}
 	var name string
 	var password string
+	defer rows.Close()
 	for rows.Next() {
 		rows.Scan(&name, &password)
 		if name == Name {
@@ -76,6 +79,7 @@ func ConfirmSignin(Name string, Password string) (bool, string) {
 			}
 		}
 	}
+
 	return false, "User does not exist"
 }
 

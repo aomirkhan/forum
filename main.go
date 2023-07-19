@@ -7,8 +7,6 @@ import (
 )
 
 func main() {
-	// internal.ToStart()
-
 	mux := http.NewServeMux()
 	files := http.FileServer(http.Dir("./templates"))
 	mux.Handle("/templates/", http.StripPrefix("/templates", files))

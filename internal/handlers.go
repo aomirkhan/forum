@@ -20,14 +20,14 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
 		return
 	}
-	cookie, err := r.Cookie("logged-in")
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 
 		return
 	}
+	cookie, err := r.Cookie("logged-in")
 
-	if err == http.ErrNoCookie {
+	if err == http.ErrNoCookie || cookie.Value == "not-logged" {
 		cookie = &http.Cookie{
 			Name:  "logged-in",
 			Value: "not-logged",
@@ -48,15 +48,19 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	} else {
 		c := cookie.Value
-		fmt.Print(c)
 		db, err := sql.Open("sqlite3", "./sql/database.db")
 		var name string
 
-		Name, err := db.Query(fmt.Sprintf("SELECT Name FROM cookies WHERE Id =%s", c))
+		Name, err := db.Query("SELECT lame FROM cookies WHERE Id = ( ? )", c)
 		if err != nil {
 			log.Fatal(err)
 		}
-		Name.Scan(&name)
+		defer Name.Close()
+		for Name.Next() {
+			Name.Scan(&name)
+			fmt.Println(name)
+		}
+
 		files := []string{
 			"./ui/html/user.home.tmpl",
 			"./ui/html/base.layout.tmpl",
@@ -66,9 +70,9 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 			log.Println(err.Error())
 			return
 		}
-		fmt.Println(cookie.Value)
-
+		db.Close()
 		tmpl.Execute(w, name)
+
 	}
 }
 
@@ -149,15 +153,15 @@ func SignUpConfirmation(w http.ResponseWriter, r *http.Request) {
 	result, text := ConfirmSignup(name, email, password, rewrittenPassword)
 	if result == true {
 
-		cost, err := bcrypt.Cost([]byte(password))
+		pwd, err := bcrypt.GenerateFromPassword([]byte(password), 1)
 		if err != nil {
 			log.Fatal(err)
 		}
-		pwd, err := bcrypt.GenerateFromPassword([]byte(password), cost)
+		db, err := sql.Open("sqlite3", "./sql/database.db")
 		if err != nil {
 			log.Fatal(err)
 		}
-		AddUser(name, email, string(pwd))
+		AddUser(name, email, string(pwd), db)
 
 		http.Redirect(w, r, "/signin", 302)
 	} else {
@@ -202,8 +206,17 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		u2 := uuid.NewV3(u1, name).String()
+<<<<<<< HEAD
+		db, err := sql.Open("sqlite3", "./sql/database.db")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer db.Close()
+		CreateSession(u2, name, db)
+=======
 
 		CreateSession(u2, name)
+>>>>>>> 8fac8fc7949bd0ea620901da793fc5fa77172573
 
 		cookie := &http.Cookie{Name: "logged-in", Value: u2, Expires: time.Now().Add(365 * 24 * time.Hour)}
 		http.SetCookie(w, cookie)
@@ -264,9 +277,19 @@ func PostConfirmation(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
+<<<<<<< HEAD
+	db, err := sql.Open("sqlite3", "./sql/database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	cookie, err := r.Cookie("logged-in")
+	DeleteCookie(cookie.Value, db)
+	cookie = &http.Cookie{
+=======
 	cookie := &http.Cookie{
+>>>>>>> 8fac8fc7949bd0ea620901da793fc5fa77172573
 		Name:  "logged-in",
-		Value: "0",
+		Value: "not-logged",
 	}
 	http.SetCookie(w, cookie)
 	http.Redirect(w, r, "/", 302)
