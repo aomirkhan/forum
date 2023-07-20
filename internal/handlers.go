@@ -319,7 +319,8 @@ func PostPage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = tmp.Execute(w, nil)
+	Comments := CollectComments(id, db)
+	err = tmp.Execute(w, Comments)
 }
 
 func CommentConfirmation(w http.ResponseWriter, r *http.Request) {

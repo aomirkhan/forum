@@ -13,6 +13,11 @@ type Post struct {
 	// Comments [string]string
 }
 
+type Comment struct {
+	Name string
+	Text string
+}
+
 func ShowPost() []Post {
 	var posts []Post
 	db, err := sql.Open("sqlite3", "./sql/database.db")

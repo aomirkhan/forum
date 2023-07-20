@@ -90,3 +90,22 @@ func AddComment(name, text string, id int, db *sql.DB) {
 	tx.Commit()
 	db.Close()
 }
+
+func CollectComments(id int, db *sql.DB) []Comment {
+	var result []Comment
+	var name string
+	var text string
+	st, err := db.Query("SELECT Name, Text FROM comments WHERE Id=(?)", id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for st.Next() {
+		st.Scan(&name, &text)
+		x := Comment{
+			Name: name,
+			Text: text,
+		}
+		result = append(result, x)
+	}
+	return result
+}
