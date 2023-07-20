@@ -36,8 +36,14 @@ func CreatePost(cookie string, text string, category string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	Flag, err := db.Query("SELECT count(*) FROM posts")
+	defer Flag.Close()
+	var flag int
+	for Flag.Next() {
+		Flag.Scan(&flag)
+	}
 
-	_, err = db.Exec("INSERT INTO posts (Post,Namae,Category) VALUES (?, ?, ?)", text, name, category)
+	_, err = db.Exec("INSERT INTO posts (Post,Namae,Category,Id) VALUES (?, ?, ?, ? )", text, name, category, flag+1)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,6 +71,19 @@ func DeleteCookie(cookie string, db *sql.DB) {
 		log.Fatal(err)
 	}
 	_, err = db.Exec("DELETE FROM cookies WHERE Id=(?)", cookie)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tx.Commit()
+	db.Close()
+}
+
+func AddComment(name, text string, id int, db *sql.DB) {
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = db.Exec("INSERT INTO comments (Name,Text,Id) VALUES (?, ?, ?)", name, text, id)
 	if err != nil {
 		log.Fatal(err)
 	}

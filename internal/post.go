@@ -9,6 +9,8 @@ type Post struct {
 	Text     string
 	Name     string
 	Category string
+	Id       int
+	// Comments [string]string
 }
 
 func ShowPost() []Post {
@@ -28,13 +30,15 @@ func ShowPost() []Post {
 	var t string
 	var n string
 	var c string
+	var i int
 	defer row.Close()
 	for row.Next() {
-		row.Scan(&t, &n, &c)
+		row.Scan(&t, &n, &c, &i)
 		onepost := Post{
 			Text:     t,
 			Name:     n,
 			Category: c,
+			Id:       i,
 		}
 		posts = append(posts, onepost)
 	}

@@ -35,17 +35,29 @@
         </form>
         </div>
     </div>
-    <div class="container1">
-        {{range .}}
-        <div class="box" >
+    <div class="box" onclick="navigateTo('/artist-page?id={{.Id}}')">
             <h2> {{.Namae}} </h2>
           <p1>{{.Text}}</p2>
             <p2>{{.Categoty}}</p2>
-        </div>
         <br>
+        </div>
        {{end}}
-       
     </div>
+    <script>
+    function navigateTo(url) {
+      window.location.href = url;
+    }
+
+    // Optional: Smooth scrolling
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+  </script>
     
 </body>
 </html>
