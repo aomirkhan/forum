@@ -361,3 +361,143 @@ func CommentConfirmation(w http.ResponseWriter, r *http.Request) {
 	AddComment(name, text, id, db)
 	http.Redirect(w, r, previousURL, 302)
 }
+
+func Likes(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		return
+	}
+	id := r.FormValue("id")
+	fmt.Println("GG", id)
+	db, err := sql.Open("sqlite3", "./sql/database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	cookie, err := r.Cookie("logged-in")
+	if err != nil {
+		log.Fatal(err)
+	}
+	var checkName string
+	row, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
+	for row.Next() {
+		row.Scan(&checkName)
+	}
+	row.Close()
+	db, err = sql.Open("sqlite3", "./sql/database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	previousURL := r.Header.Get("Referer")
+
+	rows, err := db.Query("SELECT Name FROM likes WHERE Postid=(?)", id)
+	var likerName string
+	check := false
+	for rows.Next() {
+		rows.Scan(&likerName)
+		if likerName == checkName {
+			check = true
+		}
+	}
+	rows.Close()
+
+	if check == true {
+		tx, err := db.Begin()
+		if err != nil {
+			log.Fatal(err)
+		}
+		_, err = db.Exec("DELETE FROM likes WHERE Name=(?)", checkName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		tx.Commit()
+		db.Close()
+	} else {
+		tx, err := db.Begin()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_, err = db.Exec("INSERT INTO likes (Name, Postid) VALUES (?, ?)", checkName, id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		tx.Commit()
+		db.Close()
+
+	}
+
+	http.Redirect(w, r, previousURL, 302)
+}
+
+func Dislikes(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		return
+	}
+	id := r.FormValue("id")
+	fmt.Println("GG", id)
+	db, err := sql.Open("sqlite3", "./sql/database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	cookie, err := r.Cookie("logged-in")
+	if err != nil {
+		log.Fatal(err)
+	}
+	var checkName string
+	row, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
+	for row.Next() {
+		row.Scan(&checkName)
+	}
+	row.Close()
+	db, err = sql.Open("sqlite3", "./sql/database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	previousURL := r.Header.Get("Referer")
+
+	rows, err := db.Query("SELECT Name FROM dislikes WHERE Postid=(?)", id)
+	var likerName string
+	check := false
+	for rows.Next() {
+		rows.Scan(&likerName)
+		if likerName == checkName {
+			check = true
+		}
+	}
+	rows.Close()
+
+	if check == true {
+		tx, err := db.Begin()
+		if err != nil {
+			log.Fatal(err)
+		}
+		_, err = db.Exec("DELETE FROM dislikes WHERE Name=(?)", checkName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		tx.Commit()
+		db.Close()
+	} else {
+		tx, err := db.Begin()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_, err = db.Exec("INSERT INTO dislikes (Name, Postid) VALUES (?, ?)", checkName, id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		tx.Commit()
+		db.Close()
+
+	}
+
+	http.Redirect(w, r, previousURL, 302)
+}

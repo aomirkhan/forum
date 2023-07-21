@@ -20,6 +20,9 @@ func main() {
 	mux.HandleFunc("/comments", internal.PostPage)
 	mux.HandleFunc("/postconfirmation", internal.PostConfirmation)
 	mux.HandleFunc("/commentconfirmation", internal.CommentConfirmation)
+	mux.HandleFunc("/create", internal.Create)
+	mux.HandleFunc("/like", internal.Likes)
+	mux.HandleFunc("/dislike", internal.Dislikes)
 	fmt.Println("http://127.0.0.1:8000")
 	http.ListenAndServe(":8000", mux)
 }
