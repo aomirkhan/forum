@@ -347,7 +347,8 @@ func CommentConfirmation(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	st, err := db.Query("SELECT Namae FROM posts WHERE Id=(?)", id)
+	cookie, err := r.Cookie("logged-in")
+	st, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -355,6 +356,8 @@ func CommentConfirmation(w http.ResponseWriter, r *http.Request) {
 	for st.Next() {
 		st.Scan(&name)
 	}
+	st.Close()
+
 	AddComment(name, text, id, db)
 	http.Redirect(w, r, previousURL, 302)
 }
