@@ -13,3 +13,32 @@
 </div>
 </div>
 {{end}}
+
+
+{{define "main"}}
+<div class="container1">
+        {{range .}}
+        <div class="box" >
+        
+            <h2> {{.Name}} </h2>
+          <p2>{{.Text}}</p2>
+            <p2>{{.Category}}</p2>
+               <a href="/comments?id={{.Id}}">View Comments</a>
+                
+                 <form action="/like" method="post">
+                <input type="hidden" name="id" value={{.Id}}>
+                <button type="submit">Like</button>
+                </form>
+                <p2>{{.Likes}}</p2>
+                  <form action="/dislike" method="post">
+                <input type="hidden" name="id" value={{.Id}}>
+                <button type="submit">Dislike</button>
+                </form>
+                 <p2>{{.Dislikes}}</p2>
+        </div>
+        
+        <br>
+       {{end}}
+       
+
+{{end}}

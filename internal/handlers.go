@@ -391,42 +391,67 @@ func Likes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	previousURL := r.Header.Get("Referer")
-
+	checklikes := false
+	checkdislikes := false
 	rows, err := db.Query("SELECT Name FROM likes WHERE Postid=(?)", id)
 	var likerName string
-	check := false
+	defer rows.Close()
 	for rows.Next() {
 		rows.Scan(&likerName)
 		if likerName == checkName {
-			check = true
+			checklikes = true
 		}
 	}
-	rows.Close()
+	x, err := db.Query("SELECT Name FROM dislikes WHERE Postid=(?)", id)
+	var dislikerName string
+	defer x.Close()
 
-	if check == true {
-		tx, err := db.Begin()
-		if err != nil {
-			log.Fatal(err)
+	for x.Next() {
+		x.Scan(&dislikerName)
+		if dislikerName == checkName {
+			checkdislikes = true
 		}
-		_, err = db.Exec("DELETE FROM likes WHERE Name=(?)", checkName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		tx.Commit()
-		db.Close()
-	} else {
+	}
+	if checklikes == false && checkdislikes == true {
+
 		tx, err := db.Begin()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		_, err = db.Exec("INSERT INTO likes (Name, Postid) VALUES (?, ?)", checkName, id)
+		_, err = db.Exec("DELETE FROM dislikes WHERE Name=(?) and Postid=(?)", checkName, id)
 		if err != nil {
 			log.Fatal(err)
 		}
 		tx.Commit()
 		db.Close()
+	} else if checklikes == false && checkdislikes == false {
+		tx, err := db.Begin()
+		if err != nil {
+			log.Fatal(err)
+		}
 
+		_, err = db.Exec("INSERT INTO likes (Name, Postid) VALUES (?, ?)", checkName, id)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+		tx.Commit()
+		db.Close()
+	} else if checklikes == true && checkdislikes == false {
+		tx, err := db.Begin()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_, err = db.Exec("DELETE FROM likes WHERE Name=(?) and Postid=(?)", checkName, id)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+		tx.Commit()
+		db.Close()
 	}
 
 	http.Redirect(w, r, previousURL, 302)
@@ -461,36 +486,62 @@ func Dislikes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	previousURL := r.Header.Get("Referer")
-
-	rows, err := db.Query("SELECT Name FROM dislikes WHERE Postid=(?)", id)
+	checklikes := false
+	checkdislikes := false
+	rows, err := db.Query("SELECT Name FROM likes WHERE Postid=(?)", id)
 	var likerName string
-	check := false
+	defer rows.Close()
 	for rows.Next() {
 		rows.Scan(&likerName)
 		if likerName == checkName {
-			check = true
+			checklikes = true
 		}
 	}
-	rows.Close()
+	x, err := db.Query("SELECT Name FROM dislikes WHERE Postid=(?)", id)
+	var dislikerName string
+	defer x.Close()
 
-	if check == true {
-		tx, err := db.Begin()
-		if err != nil {
-			log.Fatal(err)
+	for x.Next() {
+		x.Scan(&dislikerName)
+		if dislikerName == checkName {
+			checkdislikes = true
 		}
-		_, err = db.Exec("DELETE FROM dislikes WHERE Name=(?)", checkName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		tx.Commit()
-		db.Close()
-	} else {
+	}
+	if checklikes == true && checkdislikes == false {
+
 		tx, err := db.Begin()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		_, err = db.Exec("INSERT INTO dislikes (Name, Postid) VALUES (?, ?)", checkName, id)
+		_, err = db.Exec("DELETE FROM likes WHERE Name=(?) and Postid = (?)", checkName, id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		tx.Commit()
+		db.Close()
+	} else if checklikes == false && checkdislikes == false {
+		tx, err := db.Begin()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_, err = db.Exec("INSERT INTO dislikes (Name, Postid) VALUES (?, ?)", checkName, id)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+		tx.Commit()
+		db.Close()
+	} else if checklikes == false && checkdislikes == true {
+		tx, err := db.Begin()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_, err = db.Exec("DELETE FROM dislikes WHERE Name=(?) and Postid=(?)", checkName, id)
+
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -501,3 +552,12 @@ func Dislikes(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, previousURL, 302)
 }
+
+// func Filter(w http.ResponseWriter, r *http.Request) {
+// 	if r.Method != http.MethodPost {
+// 		w.Header().Set("Allow", http.MethodPost)
+// 		w.WriteHeader(http.StatusMethodNotAllowed)
+// 		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+// 		return
+// 	}
+// }

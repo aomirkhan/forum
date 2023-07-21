@@ -8,12 +8,17 @@
 </div>
 {{end}}
 {{define "main"}}
+ <div class="butt">
+            <form action="/create">
+            <button>createpost</button>
+        </form>
+        </div>
 <div class="container1">
         {{range .}}
         <div class="box" >
         
             <h2> {{.Name}} </h2>
-          <p1>{{.Text}}</p2>
+          <p2>{{.Text}}</p2>
             <p2>{{.Category}}</p2>
                <a href="/comments?id={{.Id}}">View Comments</a>
                 
