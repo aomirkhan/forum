@@ -567,13 +567,26 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	likesdislikes := r.Form["LikeDislike"]
 	categories := r.Form["Category"]
 	var formattedlikes []string
+
 	for i := range likesdislikes {
 		formattedlikes = append(formattedlikes, likesdislikes[i]+"s.Postid")
 	}
 	// all := append(likes, categories...)
 	if len(likesdislikes) == 0 && len(categories) == 0 {
-		http.Redirect(w, r, "/", 302)
+
+		files := []string{
+			"./ui/html/user.home.tmpl",
+			"./ui/html/base.layout.tmpl",
+		}
+		tmpl, err := template.ParseFiles(files...)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+
+		tmpl.Execute(w, nil)
 	}
+
 	text := "SELECT posts.Post, posts.Namae, posts.Category, posts.Id from posts "
 
 	if len(likesdislikes) == 2 {
@@ -636,7 +649,9 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	rows, err := db.Query(text)
+	defer db.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -648,6 +663,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	var dislikes int
 	var posts []Post
 	var ids []int
+
 	for rows.Next() {
 		rows.Scan(&t, &n, &c, &i)
 		x := false
@@ -661,6 +677,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		ids = append(ids, i)
+
 		err := db.QueryRow("SELECT count(*) FROM likes WHERE Postid=(?)", i).Scan(&likes)
 		if err != nil {
 			log.Fatal(err)
@@ -678,8 +695,27 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 			Dislikes: dislikes,
 		}
 		posts = append(posts, onepost)
+
 	}
-	fmt.Println(posts)
+	db.Close()
+
+	cookie, err := r.Cookie("logged-in")
+	if err != nil {
+		log.Fatal(err)
+	}
+	c = cookie.Value
+
+	files := []string{
+		"./ui/html/user.home.tmpl",
+		"./ui/html/base.layout.tmpl",
+	}
+	tmpl, err := template.ParseFiles(files...)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
+	tmpl.Execute(w, posts)
 }
 
 // type Post struct {
