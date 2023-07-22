@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"forum/internal"
+	"log"
 	"net/http"
 )
 
@@ -23,6 +24,8 @@ func main() {
 	mux.HandleFunc("/create", internal.Create)
 	mux.HandleFunc("/like", internal.Likes)
 	mux.HandleFunc("/dislike", internal.Dislikes)
+	mux.HandleFunc("/filter", internal.Filter)
 	fmt.Println("http://127.0.0.1:8000")
-	http.ListenAndServe(":8000", mux)
+	err := http.ListenAndServe(":8000", mux)
+	log.Fatal(err)
 }
