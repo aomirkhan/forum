@@ -15,7 +15,27 @@
 {{end}}
 
 
+
 {{define "main"}}
+
+          <form action="/filter" method="post">
+          <p1>By category:</p1>
+          <INPUT TYPE="Checkbox" Name="Category" Value="volvo">Volvo
+          <INPUT TYPE="Checkbox" Name="Category" Value="mercedes">Mercedes
+          <INPUT TYPE="Checkbox" Name="Category" Value="saab">Saab
+          <INPUT TYPE="Checkbox" Name="Category" Value="audi">Audi
+          <br>
+          <br>
+          <p1>Bye likes/dislikes:</p1>
+          <INPUT TYPE="Checkbox" Name="LikeDislike" Value="like">Liked
+          <INPUT TYPE="Checkbox" Name="LikeDislike" Value="dislike">Disliked
+          <br>
+          <br>
+          <p1>TUT NAVERNOE PO DATE</p1>
+          <br>
+          <br>
+          <button type="submit">Filter</button>
+          </form>
 <div class="container1">
         {{range .}}
         <div class="box" >

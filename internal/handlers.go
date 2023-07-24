@@ -573,18 +573,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	}
 	// all := append(likes, categories...)
 	if len(likesdislikes) == 0 && len(categories) == 0 {
-
-		files := []string{
-			"./ui/html/user.home.tmpl",
-			"./ui/html/base.layout.tmpl",
-		}
-		tmpl, err := template.ParseFiles(files...)
-		if err != nil {
-			log.Println(err.Error())
-			return
-		}
-
-		tmpl.Execute(w, nil)
+		http.Redirect(w, r, "/", 301)
 	}
 
 	text := "SELECT posts.Post, posts.Namae, posts.Category, posts.Id from posts "
