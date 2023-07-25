@@ -29,26 +29,6 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 	}
 	cookie, err := r.Cookie("logged-in")
 
-	if time.Now().After(cookie.Expires) {
-		db, err := sql.Open("sqlite3", "./sql/database.db")
-		if err != nil {
-			log.Println(err.Error())
-			return
-		}
-		tx, err := db.Begin()
-		if err != nil {
-			log.Fatal(err)
-		}
-		db.Exec("Delete * from cookies where Id = ( ? )", cookie.Value)
-		tx.Commit()
-		db.Close()
-		cookie = &http.Cookie{
-			Name:  "logged-in",
-			Value: "not-logged",
-		}
-
-	}
-
 	if err == http.ErrNoCookie || cookie.Value == "not-logged" {
 		cookie = &http.Cookie{
 			Name:  "logged-in",
@@ -70,6 +50,25 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 	} else if err != nil {
 		log.Fatal(err)
 	} else {
+		if time.Now().After(cookie.Expires) {
+			db, err := sql.Open("sqlite3", "./sql/database.db")
+			if err != nil {
+				log.Println(err.Error())
+				return
+			}
+			tx, err := db.Begin()
+			if err != nil {
+				log.Fatal(err)
+			}
+			db.Exec("Delete * from cookies where Id = ( ? )", cookie.Value)
+			tx.Commit()
+			db.Close()
+			cookie = &http.Cookie{
+				Name:  "logged-in",
+				Value: "not-logged",
+			}
+
+		}
 		c := cookie.Value
 		db, err := sql.Open("sqlite3", "./sql/database.db")
 		var name string
