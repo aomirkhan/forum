@@ -16,9 +16,11 @@ type Post struct {
 }
 
 type Comment struct {
-	Name  string
-	Text  string
-	ComId int
+	Name     string
+	Text     string
+	Comid    int
+	Likes    int
+	Dislikes int
 }
 
 func ShowPost() []Post {

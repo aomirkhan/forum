@@ -92,7 +92,17 @@ func AddComment(name, text string, id int, db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = db.Exec("INSERT INTO comments (Name,Text,Id,Comid) VALUES (?, ?, ?, ?)", name, text, id, count+1)
+	count1, err := db.Query("SELECT count(*) FROM comments WHERE Id=(?)", id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var comid int
+	defer count1.Close()
+	for count1.Next() {
+		count1.Scan(&comid)
+	}
+
+	_, err = db.Exec("INSERT INTO comments (Name,Text,Id, Comid) VALUES (?, ?, ?, ?)", name, text, id, comid+1)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -100,22 +110,34 @@ func AddComment(name, text string, id int, db *sql.DB) {
 	db.Close()
 }
 
-func CollectComments(id int, db *sql.DB, comid int) []Comment {
+func CollectComments(id int, db *sql.DB) []Comment {
 	var result []Comment
 	var name string
 	var text string
-	st, err := db.Query("SELECT Name, Text FROM comments WHERE Id=(?)", id)
+	st, err := db.Query("SELECT Name, Text, Comid FROM comments WHERE Id=(?)", id)
 	if err != nil {
+		fmt.Println("1")
 		log.Fatal(err)
 	}
+	var likes int
+	var dislikes int
+	var comid int
 	for st.Next() {
-		st.Scan(&name, &text)
+		st.Scan(&name, &text, &comid)
+		err := db.QueryRow("SELECT count(*) FROM comlikes WHERE (Comid,Id)=( ?, ? )", comid, id).Scan(&likes)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = db.QueryRow("SELECT count(*) FROM comdislikes WHERE (Comid,Id)=(? , ? )", comid, id).Scan(&dislikes)
+		if err != nil {
+			log.Fatal(err)
+		}
 		x := Comment{
-			Name:  name,
-			Text:  text,
-			ComId: comid,
-			Likes: likes,
-			Disl:  disl,
+			Name:     name,
+			Text:     text,
+			Comid:    comid,
+			Likes:    likes,
+			Dislikes: dislikes,
 		}
 		result = append(result, x)
 	}

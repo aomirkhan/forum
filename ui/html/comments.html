@@ -23,15 +23,17 @@
         
             <h2> {{.Name}} </h2>
             <p1>{{.Text}}</p2>
-                <form action="/likecomment" method="post">
-                    <input type="hidden" name="id" value={{.Id}}>
+                <form action="/comlike" method="post">
+                    <input type="hidden" name="id" value={{.Comid}}>
                     <button type="submit">Like</button>
                     </form>
                     <p2>{{.Likes}}</p2>
-                      <form action="/dislikepost" method="post">
-                    <input type="hidden" name="id" value={{.Id}}>
+                      <form action="/comdislike" method="post">
+                    <input type="hidden" name="id" value={{.Comid}}>
                     <button type="submit">Dislike</button>
                     </form>
+                     <p2>{{.Dislikes}}</p2>
+               
 
         </div>
         <br>
