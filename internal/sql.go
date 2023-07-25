@@ -79,11 +79,20 @@ func DeleteCookie(cookie string, db *sql.DB) {
 }
 
 func AddComment(name, text string, id int, db *sql.DB) {
+	i, err := db.Query("SELECT count(*) from comments where id = (?)", id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var count int
+	defer i.Close()
+	for i.Next() {
+		i.Scan(&count)
+	}
 	tx, err := db.Begin()
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = db.Exec("INSERT INTO comments (Name,Text,Id) VALUES (?, ?, ?)", name, text, id)
+	_, err = db.Exec("INSERT INTO comments (Name,Text,Id,Comid) VALUES (?, ?, ?, ?)", name, text, id, count+1)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -91,7 +100,7 @@ func AddComment(name, text string, id int, db *sql.DB) {
 	db.Close()
 }
 
-func CollectComments(id int, db *sql.DB) []Comment {
+func CollectComments(id int, db *sql.DB, comid int) []Comment {
 	var result []Comment
 	var name string
 	var text string
@@ -102,8 +111,11 @@ func CollectComments(id int, db *sql.DB) []Comment {
 	for st.Next() {
 		st.Scan(&name, &text)
 		x := Comment{
-			Name: name,
-			Text: text,
+			Name:  name,
+			Text:  text,
+			ComId: comid,
+			Likes: likes,
+			Disl:  disl,
 		}
 		result = append(result, x)
 	}

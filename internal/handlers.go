@@ -338,7 +338,7 @@ func PostPage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	Comments := CollectComments(id, db)
+	Comments := CollectComments(id, db, comid)
 	err = tmp.Execute(w, Comments)
 }
 
@@ -825,9 +825,4 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 
 		tmpl.Execute(w, posts)
 	}
-} // 	Category string
-// 	Id       int
-// 	Likes    int
-// 	Dislikes int
-
-// }
+}

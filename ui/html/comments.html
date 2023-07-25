@@ -18,12 +18,20 @@
         <button type="submit">Submit Comment</button>
     </form>
     {{range .}}
-        <div class="commentline" >
+        <div class="commentline" > 
+           
         
             <h2> {{.Name}} </h2>
             <p1>{{.Text}}</p2>
-          
-               
+                <form action="/likecomment" method="post">
+                    <input type="hidden" name="id" value={{.Id}}>
+                    <button type="submit">Like</button>
+                    </form>
+                    <p2>{{.Likes}}</p2>
+                      <form action="/dislikepost" method="post">
+                    <input type="hidden" name="id" value={{.Id}}>
+                    <button type="submit">Dislike</button>
+                    </form>
 
         </div>
         <br>
