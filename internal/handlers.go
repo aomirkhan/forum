@@ -581,6 +581,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r.ParseForm()
+	cookie, err := r.Cookie("logged-in")
 	// fmt.Println(r.Form["Category"])
 	// fmt.Println(r.Form["LikeDislike"])
 	likesdislikes := r.Form["LikeDislike"]
@@ -591,7 +592,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		formattedlikes = append(formattedlikes, likesdislikes[i]+"s.Postid")
 	}
 	// all := append(likes, categories...)
-	if len(likesdislikes) == 0 && len(categories) == 0 {
+	if len(likesdislikes) == 0 && len(categories) == 0 && len(r.Form["YourPosts"]) == 0 {
 		http.Redirect(w, r, "/", 301)
 	}
 
@@ -707,29 +708,131 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	}
 	db.Close()
 
-	cookie, err := r.Cookie("logged-in")
-	if err != nil {
-		log.Fatal(err)
-	}
-	c = cookie.Value
+	if len(r.Form["YourPosts"]) == 1 && len(posts) != 0 {
 
-	files := []string{
-		"./ui/html/user.home.tmpl",
-		"./ui/html/base.layout.tmpl",
-	}
-	tmpl, err := template.ParseFiles(files...)
-	if err != nil {
-		log.Println(err.Error())
+		db, err := sql.Open("sqlite3", "./sql/database.db")
+		if err != nil {
+			log.Fatal(err)
+		}
+		st, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
+		var name string
+
+		for st.Next() {
+			st.Scan(&name)
+		}
+		st.Close()
+		var res []Post
+		for i := range posts {
+			if posts[i].Name == name {
+				res = append(res, posts[i])
+			}
+		}
+
+		files := []string{
+			"./ui/html/user.home.tmpl",
+			"./ui/html/base.layout.tmpl",
+		}
+		tmpl, err := template.ParseFiles(files...)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		fmt.Println(res)
+
+		tmpl.Execute(w, res)
 		return
+
+	} else if len(r.Form["YourPosts"]) == 1 && len(posts) == 0 {
+		db, err := sql.Open("sqlite3", "./sql/database.db")
+		if err != nil {
+			log.Fatal(err)
+		}
+		st, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
+		var name string
+
+		for st.Next() {
+			st.Scan(&name)
+		}
+
+		st.Close()
+		db, err = sql.Open("sqlite3", "./sql/database.db")
+		if err != nil {
+			log.Fatal(err)
+		}
+		var res1 []Post
+		st1, err := db.Query("SELECT Post,Namae,Category,Id FROM posts WHERE Namae=(?)", name)
+		if err != nil {
+			log.Fatal(err)
+		}
+		var t string
+		var n string
+		var c string
+		var i int
+		var likes int
+		var dislikes int
+
+		for st1.Next() {
+			st1.Scan(&t, &n, &c, &i)
+			x := false
+			for _, el := range ids {
+				if el == i {
+					x = true
+					break
+				}
+			}
+			if x == true {
+				continue
+			}
+			ids = append(ids, i)
+
+			err := db.QueryRow("SELECT count(*) FROM likes WHERE Postid=(?)", i).Scan(&likes)
+			if err != nil {
+				log.Fatal(err)
+			}
+			err = db.QueryRow("SELECT count(*) FROM dislikes WHERE Postid=(?)", i).Scan(&dislikes)
+			if err != nil {
+				log.Fatal(err)
+			}
+			onepost := Post{
+				Text:     t,
+				Name:     n,
+				Category: c,
+				Id:       i,
+				Likes:    likes,
+				Dislikes: dislikes,
+			}
+			res1 = append(res1, onepost)
+
+		}
+		db.Close()
+
+		files := []string{
+			"./ui/html/user.home.tmpl",
+			"./ui/html/base.layout.tmpl",
+		}
+		tmpl, err := template.ParseFiles(files...)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+
+		tmpl.Execute(w, res1)
+		return
+	} else {
+
+		files := []string{
+			"./ui/html/user.home.tmpl",
+			"./ui/html/base.layout.tmpl",
+		}
+		tmpl, err := template.ParseFiles(files...)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+
+		tmpl.Execute(w, posts)
 	}
-
-	tmpl.Execute(w, posts)
-}
-
-// type Post struct {
-// 	Text     string
-// 	Name     string
-// 	Category string
+}// 	Category string
 // 	Id       int
 // 	Likes    int
 // 	Dislikes int
