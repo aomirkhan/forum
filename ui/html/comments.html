@@ -23,18 +23,18 @@
         <div class="commentline" > 
            
         
-            <h2> {{.Comments.Name}} </h2>
-            <p1>{{.Comments.Text}}</p2>
+            <h2> {{.Name}} </h2>
+            <p1>{{.Text}}</p2>
                 <form action="/comlike" method="post">
                     <input type="hidden" name="id" value={{.Comid}}>
                     <button type="submit">Like</button>
                     </form>
-                    <p2>{{.Comments.Likes}}</p2>
+                    <p2>{{.Likes}}</p2>
                       <form action="/comdislike" method="post">
                     <input type="hidden" name="id" value={{.Comid}}>
                     <button type="submit">Dislike</button>
                     </form>
-                     <p2>{{.Comments.Dislikes}}</p2>
+                     <p2>{{.Dislikes}}</p2>
                
 
         </div>
