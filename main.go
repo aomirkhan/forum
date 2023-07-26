@@ -26,6 +26,8 @@ func main() {
 	mux.HandleFunc("/dislike", internal.Dislikes)
 	mux.HandleFunc("/filter", internal.Filter)
 	mux.HandleFunc("/comlike", internal.ComLikes)
+	mux.HandleFunc("/comdislike", internal.ComDislikes)
+	mux.HandleFunc("/filter/likes", internal.Likes)
 	fmt.Println("http://127.0.0.1:8000")
 	err := http.ListenAndServe(":8000", mux)
 	log.Fatal(err)
