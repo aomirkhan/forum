@@ -8,27 +8,32 @@
     <title>Register</title>
 </head>
 <body>
-    
-    <h1>Register Page</h1>
-
-    <br>
-    <br>
-    <br>
-    
-    <p>{{.}}</p>
-    <form action="/signupconfirmation" method="post">
-       <p>Name</p>
-        <input type="text" name="UserName">
-        <p>Email</p>
-        <input type="text" name="UserEmail">
-        <p>Password</p>
-        <input type="password" name="UserPassword">
-        <p>Rewrite your password</p>
-        <input type="text" name="UserRewrittenPassword">
-        <button type="submit">Send</button>
-    </form>
-   
-<body>
+    <div class="container3">
+      <div class="login-box">
+        <h1>Register Page</h1>
+        <p>{{.}}</p>
+        <form action="/signupconfirmation" method="post">
+          <div class="input-group">
+            <p>Name</p>
+            <input type="text" name="UserName">
+          </div>
+          <div class="input-group">
+            <p>Email</p>
+            <input type="text" name="UserEmail">
+          </div>
+          <div class="input-group">
+            <p>Password</p>
+            <input type="password" name="UserPassword">
+          </div>
+          <div class="input-group">
+            <p>Rewrite your password</p>
+            <input type="password" name="UserRewrittenPassword">
+          </div>
+          <button type="submit">Send</button>
+        </form>
+      </div>
+    </div>
+  </body>
 
     
 </body>

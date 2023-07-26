@@ -1,27 +1,244 @@
+* {
+    margin: 0;
+    padding: 0;
+  }
+  
+body{
+    height: 100vh;
+    width: 100%;
+    background: linear-gradient(45deg,#ffc6cd,#e3dfff,#f5d3ae,#dbfff6);
+    background-size: 300% 300%;
+    animation: color 50s ease-in-out infinite;
+}
+@keyframes color{
+    0%{
+        background-position: 0 50%;
+    }
+    50%{
+        background-position: 100% 50%;
+    }
+    100%{
+        background-position: 0 50%;
+    }
+}
 .container{
+    background-color: #fff;
+    padding: 20px;
     display: flex;
-    height: 7vh; 
-    text-align: center;
-    background-color: gray;
+  justify-content: space-between; /* Add this line to align buttons to the right */
+  align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin: 0;
 }
 .forumname{
-    position: relative;
-    left: 13%;
-    top:11px
+    margin-right: 20px;
+    margin: 0;
+    margin: 0 10px;
+  text-decoration: none;
+  color: rgb(112, 112, 112);
 }
 .login{
-    position: relative;
-    left:6000% ; 
-    top: 30%;
+    margin-left: 20px;
+    margin-top: 10px;
+    display: inline-block;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  text-transform: uppercase;
 }
-
+button {
+    padding: 0;
+    margin: 0;
+    border: none;
+    outline: none;
+    background: none;
+    box-shadow: none;
+  }
 .signup{
-    position: relative;
-    left :6000% ; 
-    top:35%;
+    
+    margin-left: 20px;
+    margin-top: 10px;
+    display: inline-block;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  text-transform: uppercase;
 }
 .Username{
-    position: relative;
-    left: 95%;
-    top: 35%;
+    margin-left: 20px;
+    margin-top: 10px;
+    display: inline-block;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  text-transform: uppercase;
 }
+.login {
+    background-color: #fdfdfd;
+  }
+  
+  .login:hover {
+    background-color: #c4c4c4;
+  }
+  
+  .signup {
+    background-color: #fdfdfd;
+  }
+  
+  .signup:hover {
+        background-color: #c4c4c4;
+  }
+
+  .container1 {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: auto; /* Set a minimum height to occupy the whole viewport */
+  }
+  
+  .box {
+    /* Add styles for the post container here */
+    background-color: #fff;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px; /* Add space between each post */
+  border-left: 2px solid #ccc; /* Add a left border */
+  border-radius: 10px; /* Make the box more rounded */
+  width: 90%; /* Adjust the width of the box */
+  max-width: 800px; /* Set a maximum width for the box */
+  }
+
+
+  .between {
+    position: absolute;
+  top: 30%;
+  left:10%; /* Adjust the left position as needed */
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  width: 400px; /* Adjust the width as needed */
+  max-width: 90%; /* Set a maximum width for the .between div */
+  z-index: 1;
+  }
+  
+  .butt {
+    margin-bottom: 20px; /* Add space between buttons and filter sections */
+  }
+  
+  /* Style the filter sections */
+  .filter-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px; /* Add space between filter sections */
+  }
+  
+  .filter-section p1 {
+    margin-right: 10px; /* Add space between the label and checkbox */
+  }
+  
+  .between button {
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  .between button:hover {
+    background-color: #0056b3;
+  }
+
+
+/* loginpage*/
+.container3 {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+  }
+  
+  .login-box {
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    text-align: center;
+    height: 400px;
+    width: 600px;
+  }
+  
+  .login-box h1 {
+    margin-bottom: 20px;
+  }
+  
+  .login-box p {
+    margin-bottom: 30px;
+  }
+  
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .input-group p {
+    margin: 0;
+  }
+  
+  input {
+    padding: 10px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-top: 5px;
+    box-sizing: border-box;
+  }
+  
+  .container3 button {
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  .container3 button:hover {
+    background-color: #0056b3;
+  }

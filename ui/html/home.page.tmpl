@@ -17,7 +17,7 @@
 
 
 {{define "main"}}
-
+<div class="between">
           <form action="/filter" method="GET">
           <p1>By category:</p1>
           <INPUT TYPE="Checkbox" Name="Category" Value="volvo">Volvo
@@ -36,10 +36,12 @@
           <br>
           <button type="submit">Filter</button>
           </form>
+          </div>
 <div class="container1">
         {{range .}}
         <div class="box" >
-             <h2> {{.Title}} </h2>
+        
+            <h2> {{.Title}} </h2>
             <p2> {{.Name}} </p2>
           <p2>{{.Text}}</p2>
             <p2>{{.Category}}</p2>

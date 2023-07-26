@@ -8,6 +8,7 @@
 </div>
 {{end}}
 {{define "main"}}
+ <div class="between">
  <div class="butt">
             <form action="/create">
             <button>createpost</button>
@@ -32,9 +33,11 @@
           <br>
           <button type="submit">Filter</button>
           </form>
+          </div>
 <div class="container1">
         {{range .}}
         <div class="box" >
+        
             <h2> {{.Title}} </h2>
             <p2> {{.Name}} </p2>
           <p2>{{.Text}}</p2>
