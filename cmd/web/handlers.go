@@ -15,193 +15,240 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func ComLikes(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
+func Homepage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
 		return
 	}
-	previousURL := r.Header.Get("Referer")
-	postid := (strings.Split(previousURL, "id="))[1]
-	id := r.FormValue("id")
-	fmt.Println("GG", id)
-	db, err := sql.Open("sqlite3", "./sql/database.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	cookie, err := r.Cookie("logged-in")
-	if err != nil {
-		log.Fatal(err)
-	}
-	var checkName string
-	row, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
-	for row.Next() {
-		row.Scan(&checkName)
-	}
-	row.Close()
-	db, err = sql.Open("sqlite3", "./sql/database.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	checklikes := false
-	checkdislikes := false
-	rows, err := db.Query("SELECT Name FROM comlikes WHERE (Comid,Id)=(?,?)", id, postid)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var likerName string
-	defer rows.Close()
-	for rows.Next() {
-		rows.Scan(&likerName)
-		if likerName == checkName {
-			checklikes = true
-		}
-	}
-	x, err := db.Query("SELECT Name FROM comdislikes WHERE (Comid,Id)=(?,?)", id, postid)
-	if err != nil {
-		fmt.Println("2")
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+
 		return
 	}
 
-	var dislikerName string
-	defer x.Close()
+	cookie, err := r.Cookie("logged-in")
 
-	for x.Next() {
-		x.Scan(&dislikerName)
-		if dislikerName == checkName {
-			checkdislikes = true
+	if err == http.ErrNoCookie || cookie.Value == "not-logged" {
+		cookie = &http.Cookie{
+			Name:  "logged-in",
+			Value: "not-logged",
 		}
-	}
-	tx, err := db.Begin()
-	if err != nil {
+		http.SetCookie(w, cookie)
+
+		files := []string{
+			"./ui/html/home.page.tmpl",
+			"./ui/html/base.layout.tmpl",
+		}
+
+		tmpl, err := template.ParseFiles(files...)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		tmpl.Execute(w, internal.ShowPost())
+	} else if err != nil {
 		log.Fatal(err)
+	} else {
+		if time.Now().After(cookie.Expires) {
+			db, err := sql.Open("sqlite3", "./sql/database.db")
+			if err != nil {
+				log.Println(err.Error())
+				return
+			}
+			tx, err := db.Begin()
+			if err != nil {
+				log.Fatal(err)
+			}
+			db.Exec("Delete * from cookies where Id = ( ? )", cookie.Value)
+			tx.Commit()
+			db.Close()
+			cookie = &http.Cookie{
+				Name:  "logged-in",
+				Value: "not-logged",
+			}
+
+		}
+		c := cookie.Value
+		db, err := sql.Open("sqlite3", "./sql/database.db")
+		var name string
+
+		Name, err := db.Query("SELECT lame FROM cookies WHERE Id = ( ? )", c)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer Name.Close()
+		for Name.Next() {
+			Name.Scan(&name)
+			fmt.Println(name)
+		}
+
+		files := []string{
+			"./ui/html/user.home.tmpl",
+			"./ui/html/base.layout.tmpl",
+		}
+		tmpl, err := template.ParseFiles(files...)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		db.Close()
+		tmpl.Execute(w, internal.ShowPost())
+
 	}
-	fmt.Println("GG", id)
-	if checklikes == false && checkdislikes == true {
-
-		_, err = db.Exec("INSERT INTO comlikes (Name, Comid,Id) VALUES (?, ?, ?)", checkName, id, postid)
-		_, err = db.Exec("DELETE FROM comdislikes WHERE Name=(?) and Comid=(?) and Id=(?)", checkName, id, postid)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-	} else if checklikes == false && checkdislikes == false {
-		fmt.Println(1)
-
-		_, err = db.Exec("INSERT INTO comlikes (Name, Comid,Id) VALUES (?, ?, ?)", checkName, id, postid)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-	} else if checklikes == true && checkdislikes == false {
-		fmt.Println(2)
-
-		_, err = db.Exec("DELETE FROM comlikes WHERE Name=(?) and Comid=(?) and Id=(?)", checkName, id, postid)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	tx.Commit()
-
-	http.Redirect(w, r, previousURL, 302)
 }
 
-func ComDislikes(w http.ResponseWriter, r *http.Request) {
+func SignUp(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		return
+	}
+	tmpl, err := template.ParseFiles("./ui/html/signup.html")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
+func SignUpConfirmation(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		fmt.Println("WHY")
 		w.Header().Set("Allow", http.MethodPost)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
 		return
 	}
-	previousURL := r.Header.Get("Referer")
-	postid := (strings.Split(previousURL, "id="))[1]
-	id := r.FormValue("id")
-	fmt.Println("GG", id)
+	name := r.FormValue("UserName")
+
+	email := r.FormValue("UserEmail")
+	password := r.FormValue("UserPassword")
+	rewrittenPassword := r.FormValue("UserRewrittenPassword")
+
+	result, text := internal.ConfirmSignup(name, email, password, rewrittenPassword)
+	if result == true {
+
+		pwd, err := bcrypt.GenerateFromPassword([]byte(password), 1)
+		if err != nil {
+			log.Fatal(err)
+		}
+		db, err := sql.Open("sqlite3", "./sql/database.db")
+		if err != nil {
+			log.Fatal(err)
+		}
+		internal.AddUser(name, email, string(pwd), db)
+
+		http.Redirect(w, r, "/signin", 302)
+	} else {
+		tmpl, err := template.ParseFiles("./ui/html/signup.html")
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		tmpl.Execute(w, text)
+	}
+}
+
+func SignIn(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		return
+	}
+	tmpl, err := template.ParseFiles("./ui/html/signin.html")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
+func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		return
+	}
+	name := r.FormValue("UserName")
+	password := r.FormValue("UserPassword")
+	result, text := internal.ConfirmSignin(name, password)
+	if result == true {
+		u1, err := uuid.NewV4()
+		if err != nil {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		u2 := uuid.NewV3(u1, name).String()
+		db, err := sql.Open("sqlite3", "./sql/database.db")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer db.Close()
+		internal.CreateSession(u2, name, db)
+
+		cookie := &http.Cookie{Name: "logged-in", Value: u2, Expires: time.Now().Add(365 * 24 * time.Hour)}
+		http.SetCookie(w, cookie)
+		http.Redirect(w, r, "/", 302)
+	} else {
+		tmpl, err := template.ParseFiles("./ui/html/signin.html")
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		tmpl.Execute(w, text)
+	}
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 	cookie, err := r.Cookie("logged-in")
-	if err != nil {
-		log.Fatal(err)
+	internal.DeleteCookie(cookie.Value, db)
+	cookie = &http.Cookie{
+		Name:  "logged-in",
+		Value: "not-logged",
 	}
-	var checkName string
-	row, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
-	for row.Next() {
-		row.Scan(&checkName)
-	}
-	row.Close()
-	db, err = sql.Open("sqlite3", "./sql/database.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	checklikes := false
-	checkdislikes := false
-	rows, err := db.Query("SELECT Name FROM comlikes WHERE (Comid,Id)=(?,?)", id, postid)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var likerName string
-	defer rows.Close()
-	for rows.Next() {
-		rows.Scan(&likerName)
-		if likerName == checkName {
-			checklikes = true
-		}
-	}
-	x, err := db.Query("SELECT Name FROM comdislikes WHERE (Comid,Id)=(?,?)", id, postid)
-	if err != nil {
-		fmt.Println("2")
+	http.SetCookie(w, cookie)
+	http.Redirect(w, r, "/", 302)
+}
+
+func Create(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
 		return
 	}
 
-	var dislikerName string
-	defer x.Close()
-
-	for x.Next() {
-		x.Scan(&dislikerName)
-		if dislikerName == checkName {
-			checkdislikes = true
-		}
+	tmpl, err := template.ParseFiles("./ui/html/create.html")
+	if err != nil {
+		log.Println(err.Error())
+		return
 	}
-	tx, err := db.Begin()
+	tmpl.Execute(w, nil)
+}
+
+func PostConfirmation(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		return
+	}
+	text := r.FormValue("convert")
+	cat := r.FormValue("cars")
+	cookie, err := r.Cookie("logged-in")
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("GG", id)
-	if checklikes == true && checkdislikes == false {
-
-		_, err = db.Exec("INSERT INTO comdislikes (Name, Comid,Id) VALUES (?, ?, ?)", checkName, id, postid)
-		_, err = db.Exec("DELETE FROM comlikes WHERE Name=(?) and Comid=(?) and Id=(?)", checkName, id, postid)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-	} else if checklikes == false && checkdislikes == false {
-		fmt.Println(1)
-
-		_, err = db.Exec("INSERT INTO comdislikes (Name, Comid,Id) VALUES (?, ?, ?)", checkName, id, postid)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-	} else if checklikes == false && checkdislikes == true {
-		fmt.Println(2)
-
-		_, err = db.Exec("DELETE FROM comdislikes WHERE Name=(?) and Comid=(?) and Id=(?)", checkName, id, postid)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	tx.Commit()
-
-	http.Redirect(w, r, previousURL, 302)
+	internal.CreatePost(cookie.Value, text, cat)
+	http.Redirect(w, r, "/", 302)
 }
 
 func PostPage(w http.ResponseWriter, r *http.Request) {
@@ -288,90 +335,6 @@ func CommentConfirmation(w http.ResponseWriter, r *http.Request) {
 
 	internal.AddComment(name, text, id, db)
 	http.Redirect(w, r, previousURL, 302)
-}
-
-func Homepage(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
-		return
-	}
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-
-		return
-	}
-
-	cookie, err := r.Cookie("logged-in")
-
-	if err == http.ErrNoCookie || cookie.Value == "not-logged" {
-		cookie = &http.Cookie{
-			Name:  "logged-in",
-			Value: "not-logged",
-		}
-		http.SetCookie(w, cookie)
-
-		files := []string{
-			"./ui/html/home.page.tmpl",
-			"./ui/html/base.layout.tmpl",
-		}
-
-		tmpl, err := template.ParseFiles(files...)
-		if err != nil {
-			log.Println(err.Error())
-			return
-		}
-		tmpl.Execute(w, internal.ShowPost())
-	} else if err != nil {
-		log.Fatal(err)
-	} else {
-		if time.Now().After(cookie.Expires) {
-			db, err := sql.Open("sqlite3", "./sql/database.db")
-			if err != nil {
-				log.Println(err.Error())
-				return
-			}
-			tx, err := db.Begin()
-			if err != nil {
-				log.Fatal(err)
-			}
-			db.Exec("Delete * from cookies where Id = ( ? )", cookie.Value)
-			tx.Commit()
-			db.Close()
-			cookie = &http.Cookie{
-				Name:  "logged-in",
-				Value: "not-logged",
-			}
-
-		}
-		c := cookie.Value
-		db, err := sql.Open("sqlite3", "./sql/database.db")
-		var name string
-
-		Name, err := db.Query("SELECT lame FROM cookies WHERE Id = ( ? )", c)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer Name.Close()
-		for Name.Next() {
-			Name.Scan(&name)
-			fmt.Println(name)
-		}
-
-		files := []string{
-			"./ui/html/user.home.tmpl",
-			"./ui/html/base.layout.tmpl",
-		}
-		tmpl, err := template.ParseFiles(files...)
-		if err != nil {
-			log.Println(err.Error())
-			return
-		}
-		db.Close()
-		tmpl.Execute(w, internal.ShowPost())
-
-	}
 }
 
 func Filter(w http.ResponseWriter, r *http.Request) {
@@ -656,39 +619,6 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Create(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
-		return
-	}
-
-	tmpl, err := template.ParseFiles("./ui/html/create.html")
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-	tmpl.Execute(w, nil)
-}
-
-func PostConfirmation(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
-		return
-	}
-	text := r.FormValue("convert")
-	cat := r.FormValue("cars")
-	cookie, err := r.Cookie("logged-in")
-	if err != nil {
-		log.Fatal(err)
-	}
-	internal.CreatePost(cookie.Value, text, cat)
-	http.Redirect(w, r, "/", 302)
-}
-
 func Likes(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
@@ -880,121 +810,191 @@ func Dislikes(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, previousURL, 302)
 }
 
-func SignUp(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
-		return
-	}
-	tmpl, err := template.ParseFiles("./ui/html/signup.html")
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-	tmpl.Execute(w, nil)
-}
-
-func SignUpConfirmation(w http.ResponseWriter, r *http.Request) {
+func ComLikes(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
 		return
 	}
-	name := r.FormValue("UserName")
-
-	email := r.FormValue("UserEmail")
-	password := r.FormValue("UserPassword")
-	rewrittenPassword := r.FormValue("UserRewrittenPassword")
-
-	result, text := internal.ConfirmSignup(name, email, password, rewrittenPassword)
-	if result == true {
-
-		pwd, err := bcrypt.GenerateFromPassword([]byte(password), 1)
-		if err != nil {
-			log.Fatal(err)
-		}
-		db, err := sql.Open("sqlite3", "./sql/database.db")
-		if err != nil {
-			log.Fatal(err)
-		}
-		internal.AddUser(name, email, string(pwd), db)
-
-		http.Redirect(w, r, "/signin", 302)
-	} else {
-		tmpl, err := template.ParseFiles("./ui/html/signup.html")
-		if err != nil {
-			log.Println(err.Error())
-			return
-		}
-		tmpl.Execute(w, text)
-	}
-}
-
-func SignIn(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
-		return
-	}
-	tmpl, err := template.ParseFiles("./ui/html/signin.html")
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-	tmpl.Execute(w, nil)
-}
-
-func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
-		return
-	}
-	name := r.FormValue("UserName")
-	password := r.FormValue("UserPassword")
-	result, text := internal.ConfirmSignin(name, password)
-	if result == true {
-		u1, err := uuid.NewV4()
-		if err != nil {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-		u2 := uuid.NewV3(u1, name).String()
-		db, err := sql.Open("sqlite3", "./sql/database.db")
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer db.Close()
-		internal.CreateSession(u2, name, db)
-
-		cookie := &http.Cookie{Name: "logged-in", Value: u2, Expires: time.Now().Add(365 * 24 * time.Hour)}
-		http.SetCookie(w, cookie)
-		http.Redirect(w, r, "/", 302)
-	} else {
-		tmpl, err := template.ParseFiles("./ui/html/signin.html")
-		if err != nil {
-			log.Println(err.Error())
-			return
-		}
-		tmpl.Execute(w, text)
-	}
-}
-
-func Logout(w http.ResponseWriter, r *http.Request) {
+	previousURL := r.Header.Get("Referer")
+	postid := (strings.Split(previousURL, "id="))[1]
+	id := r.FormValue("id")
+	fmt.Println("GG", id)
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 	cookie, err := r.Cookie("logged-in")
-	internal.DeleteCookie(cookie.Value, db)
-	cookie = &http.Cookie{
-		Name:  "logged-in",
-		Value: "not-logged",
+	if err != nil {
+		log.Fatal(err)
 	}
-	http.SetCookie(w, cookie)
-	http.Redirect(w, r, "/", 302)
+	var checkName string
+	row, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
+	for row.Next() {
+		row.Scan(&checkName)
+	}
+	row.Close()
+	db, err = sql.Open("sqlite3", "./sql/database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	checklikes := false
+	checkdislikes := false
+	rows, err := db.Query("SELECT Name FROM comlikes WHERE (Comid,Id)=(?,?)", id, postid)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var likerName string
+	defer rows.Close()
+	for rows.Next() {
+		rows.Scan(&likerName)
+		if likerName == checkName {
+			checklikes = true
+		}
+	}
+	x, err := db.Query("SELECT Name FROM comdislikes WHERE (Comid,Id)=(?,?)", id, postid)
+	if err != nil {
+		fmt.Println("2")
+		return
+	}
+
+	var dislikerName string
+	defer x.Close()
+
+	for x.Next() {
+		x.Scan(&dislikerName)
+		if dislikerName == checkName {
+			checkdislikes = true
+		}
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("GG", id)
+	if checklikes == false && checkdislikes == true {
+
+		_, err = db.Exec("INSERT INTO comlikes (Name, Comid,Id) VALUES (?, ?, ?)", checkName, id, postid)
+		_, err = db.Exec("DELETE FROM comdislikes WHERE Name=(?) and Comid=(?) and Id=(?)", checkName, id, postid)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	} else if checklikes == false && checkdislikes == false {
+		fmt.Println(1)
+
+		_, err = db.Exec("INSERT INTO comlikes (Name, Comid,Id) VALUES (?, ?, ?)", checkName, id, postid)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	} else if checklikes == true && checkdislikes == false {
+		fmt.Println(2)
+
+		_, err = db.Exec("DELETE FROM comlikes WHERE Name=(?) and Comid=(?) and Id=(?)", checkName, id, postid)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	tx.Commit()
+
+	http.Redirect(w, r, previousURL, 302)
+}
+
+func ComDislikes(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		fmt.Println("WHY")
+		w.Header().Set("Allow", http.MethodPost)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		return
+	}
+	previousURL := r.Header.Get("Referer")
+	postid := (strings.Split(previousURL, "id="))[1]
+	id := r.FormValue("id")
+	fmt.Println("GG", id)
+	db, err := sql.Open("sqlite3", "./sql/database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	cookie, err := r.Cookie("logged-in")
+	if err != nil {
+		log.Fatal(err)
+	}
+	var checkName string
+	row, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
+	for row.Next() {
+		row.Scan(&checkName)
+	}
+	row.Close()
+	db, err = sql.Open("sqlite3", "./sql/database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	checklikes := false
+	checkdislikes := false
+	rows, err := db.Query("SELECT Name FROM comlikes WHERE (Comid,Id)=(?,?)", id, postid)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var likerName string
+	defer rows.Close()
+	for rows.Next() {
+		rows.Scan(&likerName)
+		if likerName == checkName {
+			checklikes = true
+		}
+	}
+	x, err := db.Query("SELECT Name FROM comdislikes WHERE (Comid,Id)=(?,?)", id, postid)
+	if err != nil {
+		fmt.Println("2")
+		return
+	}
+
+	var dislikerName string
+	defer x.Close()
+
+	for x.Next() {
+		x.Scan(&dislikerName)
+		if dislikerName == checkName {
+			checkdislikes = true
+		}
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("GG", id)
+	if checklikes == true && checkdislikes == false {
+
+		_, err = db.Exec("INSERT INTO comdislikes (Name, Comid,Id) VALUES (?, ?, ?)", checkName, id, postid)
+		_, err = db.Exec("DELETE FROM comlikes WHERE Name=(?) and Comid=(?) and Id=(?)", checkName, id, postid)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	} else if checklikes == false && checkdislikes == false {
+		fmt.Println(1)
+
+		_, err = db.Exec("INSERT INTO comdislikes (Name, Comid,Id) VALUES (?, ?, ?)", checkName, id, postid)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	} else if checklikes == false && checkdislikes == true {
+		fmt.Println(2)
+
+		_, err = db.Exec("DELETE FROM comdislikes WHERE Name=(?) and Comid=(?) and Id=(?)", checkName, id, postid)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	tx.Commit()
+
+	http.Redirect(w, r, previousURL, 302)
 }
