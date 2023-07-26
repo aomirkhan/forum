@@ -731,11 +731,20 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 				res = append(res, posts[i])
 			}
 		}
-
-		files := []string{
-			"./ui/html/user.home.tmpl",
-			"./ui/html/base.layout.tmpl",
+		cook, err := r.Cookie("logged-in")
+		var files []string
+		if err == http.ErrNoCookie || cook.Value == "not-logged" {
+			files = []string{
+				"./ui/html/home.page.tmpl",
+				"./ui/html/base.layout.tmpl",
+			}
+		} else {
+			files = []string{
+				"./ui/html/user.home.tmpl",
+				"./ui/html/base.layout.tmpl",
+			}
 		}
+
 		tmpl, err := template.ParseFiles(files...)
 		if err != nil {
 			log.Println(err.Error())
@@ -800,9 +809,18 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		}
 		db.Close()
 
-		files := []string{
-			"./ui/html/user.home.tmpl",
-			"./ui/html/base.layout.tmpl",
+		cook, err := r.Cookie("logged-in")
+		var files []string
+		if err == http.ErrNoCookie || cook.Value == "not-logged" {
+			files = []string{
+				"./ui/html/home.page.tmpl",
+				"./ui/html/base.layout.tmpl",
+			}
+		} else {
+			files = []string{
+				"./ui/html/user.home.tmpl",
+				"./ui/html/base.layout.tmpl",
+			}
 		}
 		tmpl, err := template.ParseFiles(files...)
 		if err != nil {
@@ -811,13 +829,22 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Print(res1)
 		tmpl.Execute(w, res1)
-		return
+
 	} else {
 		fmt.Println("GGG")
 
-		files := []string{
-			"./ui/html/home.page.tmpl",
-			"./ui/html/base.layout.tmpl",
+		cook, err := r.Cookie("logged-in")
+		var files []string
+		if err == http.ErrNoCookie || cook.Value == "not-logged" {
+			files = []string{
+				"./ui/html/home.page.tmpl",
+				"./ui/html/base.layout.tmpl",
+			}
+		} else {
+			files = []string{
+				"./ui/html/user.home.tmpl",
+				"./ui/html/base.layout.tmpl",
+			}
 		}
 		tmpl, err := template.ParseFiles(files...)
 		if err != nil {
