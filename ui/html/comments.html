@@ -21,7 +21,8 @@
         <div class="commentline" > 
            
         
-            <h2> {{.Name}} </h2>
+            <h2> {{.Title}} </h2>
+            <p1>{{.Name}}</p2>
             <p1>{{.Text}}</p2>
                 <form action="/comlike" method="post">
                     <input type="hidden" name="id" value={{.Comid}}>

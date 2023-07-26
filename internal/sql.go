@@ -18,7 +18,7 @@ func AddUser(UserName string, Email string, hashedPassword string, db *sql.DB) {
 	db.Close()
 }
 
-func CreatePost(cookie string, text string, category string) {
+func CreatePost(cookie string, text string, category string, title string) {
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	Name, err := db.Query("SELECT lame FROM cookies WHERE Id = ( ? )", cookie)
 	if err != nil {
@@ -43,7 +43,7 @@ func CreatePost(cookie string, text string, category string) {
 		Flag.Scan(&flag)
 	}
 
-	_, err = db.Exec("INSERT INTO posts (Post,Namae,Category,Id) VALUES (?, ?, ?, ? )", text, name, category, flag+1)
+	_, err = db.Exec("INSERT INTO posts (Title,Post,Namae,Category,Id) VALUES (?, ?, ?, ?, ? )", title, text, name, category, flag+1)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -144,6 +144,14 @@ func CollectComments(id int, db *sql.DB) []Comment {
 	return result
 }
 
+// ype Post struct {
+// 	Title    string
+// 	Text     string
+// 	Name     string
+// 	Category string
+// 	Id       int
+// 	Likes    int
+// 	Dislikes int
 func ShowPost() []Post {
 	var posts []Post
 	db, err := sql.Open("sqlite3", "./sql/database.db")
@@ -158,6 +166,7 @@ func ShowPost() []Post {
 	if err != nil {
 		log.Fatal(err)
 	}
+	var title string
 	var t string
 	var n string
 	var c string
@@ -166,7 +175,7 @@ func ShowPost() []Post {
 	var dislikes int
 	defer row.Close()
 	for row.Next() {
-		row.Scan(&t, &n, &c, &i)
+		row.Scan(&title, &t, &n, &c, &i)
 		err := db.QueryRow("SELECT count(*) FROM likes WHERE Postid=(?)", i).Scan(&likes)
 		if err != nil {
 			log.Fatal(err)
@@ -176,6 +185,7 @@ func ShowPost() []Post {
 			log.Fatal(err)
 		}
 		onepost := Post{
+			Title:    title,
 			Text:     t,
 			Name:     n,
 			Category: c,
@@ -183,6 +193,7 @@ func ShowPost() []Post {
 			Likes:    likes,
 			Dislikes: dislikes,
 		}
+		fmt.Println(onepost, "GG")
 		posts = append(posts, onepost)
 	}
 

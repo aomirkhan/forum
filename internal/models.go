@@ -1,6 +1,7 @@
 package internal
 
 type Post struct {
+	Title    string
 	Text     string
 	Name     string
 	Category string

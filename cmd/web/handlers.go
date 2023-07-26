@@ -241,13 +241,14 @@ func PostConfirmation(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
 		return
 	}
+	title := r.FormValue("title")
 	text := r.FormValue("convert")
 	cat := r.FormValue("cars")
 	cookie, err := r.Cookie("logged-in")
 	if err != nil {
 		log.Fatal(err)
 	}
-	internal.CreatePost(cookie.Value, text, cat)
+	internal.CreatePost(cookie.Value, text, cat, title)
 	http.Redirect(w, r, "/", 302)
 }
 
@@ -375,7 +376,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", 301)
 	}
 
-	text := "SELECT posts.Post, posts.Namae, posts.Category, posts.Id from posts "
+	text := "SELECT posts.Title, posts.Post, posts.Namae, posts.Category, posts.Id from posts "
 
 	if len(likesdislikes) == 2 {
 		text = text + "INNER JOIN likes on posts.Id=likes.Postid INNER JOIN dislikes on posts.Id=dislikes.Postid"
@@ -444,6 +445,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	var title string
 	var t string
 	var n string
 	var c string
@@ -454,7 +456,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	var ids []int
 
 	for rows.Next() {
-		rows.Scan(&t, &n, &c, &i)
+		rows.Scan(&title, &t, &n, &c, &i)
 		x := false
 		for _, el := range ids {
 			if el == i {
@@ -476,6 +478,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 		onepost := internal.Post{
+			Title:    title,
 			Text:     t,
 			Name:     n,
 			Category: c,
@@ -551,10 +554,11 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 		var res1 []internal.Post
-		st1, err := db.Query("SELECT Post,Namae,Category,Id FROM posts WHERE Namae=(?)", name)
+		st1, err := db.Query("SELECT Title, Post,Namae,Category,Id FROM posts WHERE Namae=(?)", name)
 		if err != nil {
 			log.Fatal(err)
 		}
+		var title string
 		var t string
 		var n string
 		var c string
@@ -563,7 +567,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		var dislikes int
 		defer st1.Close()
 		for st1.Next() {
-			st1.Scan(&t, &n, &c, &i)
+			st1.Scan(&title, &t, &n, &c, &i)
 
 			err := db.QueryRow("SELECT count(*) FROM likes WHERE Postid=(?)", i).Scan(&likes)
 			if err != nil {
@@ -574,6 +578,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 				log.Fatal(err)
 			}
 			onepost := internal.Post{
+				Title:    title,
 				Text:     t,
 				Name:     n,
 				Category: c,
