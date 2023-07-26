@@ -347,6 +347,20 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	}
 	r.ParseForm()
 	cookie, err := r.Cookie("logged-in")
+	cc := cookie.Value
+	db, err := sql.Open("sqlite3", "./sql/database.db")
+	var namecookie string
+
+	Name, err := db.Query("SELECT lame FROM cookies WHERE Id = ( ? )", cc)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer Name.Close()
+	for Name.Next() {
+		Name.Scan(&namecookie)
+	}
+	Name.Close()
+	db.Close()
 	// fmt.Println(r.Form["Category"])
 	// fmt.Println(r.Form["LikeDislike"])
 	likesdislikes := r.Form["LikeDislike"]
@@ -377,9 +391,9 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		text = text + " WHERE "
 		for i := range formattedlikes {
 			if i == 0 {
-				text = text + "posts.Id=" + formattedlikes[i]
+				text = text + "(posts.Id=" + formattedlikes[i] + " AND " + likesdislikes[i] + "s.Name=\"" + namecookie + "\")"
 			} else {
-				text = text + " OR posts.Id=" + formattedlikes[i]
+				text = text + " OR (posts.Id=" + formattedlikes[i] + " AND " + likesdislikes[i] + "s.Name=\"" + namecookie + "\")"
 			}
 		}
 	} else if len(categories) > 0 {
@@ -420,7 +434,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println(text)
 	fmt.Println(r.Form["YourPosts"])
-	db, err := sql.Open("sqlite3", "./sql/database.db")
+	db, err = sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
 		log.Fatal(err)
 	}
