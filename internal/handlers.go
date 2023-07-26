@@ -816,7 +816,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("GGG")
 
 		files := []string{
-			"./ui/html/user.home.tmpl",
+			"./ui/html/home.page.tmpl",
 			"./ui/html/base.layout.tmpl",
 		}
 		tmpl, err := template.ParseFiles(files...)
