@@ -4,36 +4,37 @@
     <title>Post Page</title>
 </head>
 <body>
-    <h1>Post Title</h1>
-    
-   
+    <h1>{{.Title}}</h1>
+    <br>
+    <p1>{{.Name}}</p1>
+    <br>
+    <p1>{{.Post}}</p1>
+    <br>
     <h3>Add a Comment</h3>
     <form action="/commentconfirmation" method="post">
-        <!-- <label for="name">Name:</label> -->
-        <!-- <input type="text" id="name" name="name" required> -->
+       
 
         <label for="comment">Comment:</label>
         <textarea id="comment" name="comment" rows="4" cols="50" required></textarea>
 
         <button type="submit">Submit Comment</button>
     </form>
-    {{range .}}
+    {{range .Comments}}
         <div class="commentline" > 
            
         
-            <h2> {{.Title}} </h2>
-            <p1>{{.Name}}</p2>
-            <p1>{{.Text}}</p2>
+            <h2> {{.Comments.Name}} </h2>
+            <p1>{{.Comments.Text}}</p2>
                 <form action="/comlike" method="post">
                     <input type="hidden" name="id" value={{.Comid}}>
                     <button type="submit">Like</button>
                     </form>
-                    <p2>{{.Likes}}</p2>
+                    <p2>{{.Comments.Likes}}</p2>
                       <form action="/comdislike" method="post">
                     <input type="hidden" name="id" value={{.Comid}}>
                     <button type="submit">Dislike</button>
                     </form>
-                     <p2>{{.Dislikes}}</p2>
+                     <p2>{{.Comments.Dislikes}}</p2>
                
 
         </div>

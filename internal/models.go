@@ -18,3 +18,10 @@ type Comment struct {
 	Likes    int
 	Dislikes int
 }
+
+type Postpage struct {
+	Title    string
+	Post     string
+	Name     string
+	Comments []Comment
+}

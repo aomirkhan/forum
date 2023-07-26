@@ -81,7 +81,6 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 		defer Name.Close()
 		for Name.Next() {
 			Name.Scan(&name)
-			fmt.Println(name)
 		}
 
 		files := []string{
@@ -269,11 +268,28 @@ func PostPage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
+	db, err := sql.Open("sqlite3", "./sql/database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	qu, err := db.Query("select Title, Post,Namae from posts where Id=(?)", id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer qu.Close()
+	var title string
+	var text string
+	var name string
+	for qu.Next() {
+		qu.Scan(&title, &text, &name)
+	}
+
+	db.Close()
 	if r.URL.String() != "/comments?id="+strconv.Itoa(id) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	db, err := sql.Open("sqlite3", "./sql/database.db")
+	db, err = sql.Open("sqlite3", "./sql/database.db")
 	defer db.Close()
 	count, err := db.Query("select count(*) from posts;")
 	if err != nil {
@@ -295,8 +311,16 @@ func PostPage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	Comments := internal.CollectComments(id, db)
-	err = tmp.Execute(w, Comments)
+	comments := internal.CollectComments(id, db)
+	result := internal.Postpage{
+		Title:    title,
+		Post:     text,
+		Name:     name,
+		Comments: comments,
+	}
+	// fmt.Printf("%s i title\n%s is post\n%s is name\n", title, text, name)
+	// fmt.Println(comments)
+	err = tmp.Execute(w, result)
 }
 
 func CommentConfirmation(w http.ResponseWriter, r *http.Request) {
@@ -362,8 +386,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	}
 	Name.Close()
 	db.Close()
-	// fmt.Println(r.Form["Category"])
-	// fmt.Println(r.Form["LikeDislike"])
+
 	likesdislikes := r.Form["LikeDislike"]
 	categories := r.Form["Category"]
 	var formattedlikes []string
@@ -433,8 +456,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 
 		}
 	}
-	fmt.Println(text)
-	fmt.Println(r.Form["YourPosts"])
+
 	db, err = sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
 		log.Fatal(err)
@@ -530,7 +552,6 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 			log.Println(err.Error())
 			return
 		}
-		fmt.Println(res)
 
 		tmpl.Execute(w, res)
 		return
@@ -609,11 +630,10 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 			log.Println(err.Error())
 			return
 		}
-		fmt.Print(res1)
+
 		tmpl.Execute(w, res1)
 
 	} else {
-		fmt.Println("GGG")
 
 		cook, err := r.Cookie("logged-in")
 		var files []string
@@ -646,7 +666,7 @@ func Likes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := r.FormValue("id")
-	fmt.Println("GG", id)
+
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
 		log.Fatal(err)
@@ -741,7 +761,7 @@ func Dislikes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := r.FormValue("id")
-	fmt.Println("GG", id)
+
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
 		log.Fatal(err)
@@ -839,7 +859,7 @@ func ComLikes(w http.ResponseWriter, r *http.Request) {
 	previousURL := r.Header.Get("Referer")
 	postid := (strings.Split(previousURL, "id="))[1]
 	id := r.FormValue("id")
-	fmt.Println("GG", id)
+
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
 		log.Fatal(err)
@@ -901,7 +921,6 @@ func ComLikes(w http.ResponseWriter, r *http.Request) {
 		}
 
 	} else if checklikes == false && checkdislikes == false {
-		fmt.Println(1)
 
 		_, err = db.Exec("INSERT INTO comlikes (Name, Comid,Id) VALUES (?, ?, ?)", checkName, id, postid)
 
@@ -910,7 +929,6 @@ func ComLikes(w http.ResponseWriter, r *http.Request) {
 		}
 
 	} else if checklikes == true && checkdislikes == false {
-		fmt.Println(2)
 
 		_, err = db.Exec("DELETE FROM comlikes WHERE Name=(?) and Comid=(?) and Id=(?)", checkName, id, postid)
 
@@ -934,7 +952,7 @@ func ComDislikes(w http.ResponseWriter, r *http.Request) {
 	previousURL := r.Header.Get("Referer")
 	postid := (strings.Split(previousURL, "id="))[1]
 	id := r.FormValue("id")
-	fmt.Println("GG", id)
+
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
 		log.Fatal(err)

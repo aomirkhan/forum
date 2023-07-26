@@ -13,7 +13,7 @@ func AddUser(UserName string, Email string, hashedPassword string, db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(UserName, Email, hashedPassword)
+
 	statement.Exec(UserName, Email, hashedPassword)
 	db.Close()
 }
@@ -116,7 +116,6 @@ func CollectComments(id int, db *sql.DB) []Comment {
 	var text string
 	st, err := db.Query("SELECT Name, Text, Comid FROM comments WHERE Id=(?)", id)
 	if err != nil {
-		fmt.Println("1")
 		log.Fatal(err)
 	}
 	var likes int
@@ -141,6 +140,7 @@ func CollectComments(id int, db *sql.DB) []Comment {
 		}
 		result = append(result, x)
 	}
+	fmt.Println(result)
 	return result
 }
 
@@ -193,7 +193,7 @@ func ShowPost() []Post {
 			Likes:    likes,
 			Dislikes: dislikes,
 		}
-		fmt.Println(onepost, "GG")
+
 		posts = append(posts, onepost)
 	}
 
