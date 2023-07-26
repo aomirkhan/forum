@@ -5,6 +5,7 @@ CREATE TABLE users(
 
 );
 CREATE TABLE posts(
+    Title VARCHAR(50) NOT NULL,
     Post VARCHAR(500) NOT NULL,
     Namae VARCHAR(50) NOT NULL,
     Category VARCHAR(40) NOT NULL,
@@ -44,6 +45,3 @@ CREATE TABLE dislikes(
     -- FOREIGN KEY (Postid) REFERENCES posts(Id) 
 
 );
-
-
-
