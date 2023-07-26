@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"forum/internal"
+	"forum/cmd/web"
 	"log"
 	"net/http"
 )
@@ -12,22 +12,22 @@ func main() {
 	files := http.FileServer(http.Dir("./templates"))
 	mux.Handle("/templates/", http.StripPrefix("/templates", files))
 
-	mux.HandleFunc("/", internal.Homepage)
-	mux.HandleFunc("/signup", internal.SignUp)
-	mux.HandleFunc("/signin", internal.SignIn)
-	mux.HandleFunc("/logout", internal.Logout)
-	mux.HandleFunc("/signupconfirmation", internal.SignUpConfirmation)
-	mux.HandleFunc("/signinconfirmation", internal.SignInConfirmation)
-	mux.HandleFunc("/comments", internal.PostPage)
-	mux.HandleFunc("/postconfirmation", internal.PostConfirmation)
-	mux.HandleFunc("/commentconfirmation", internal.CommentConfirmation)
-	mux.HandleFunc("/create", internal.Create)
-	mux.HandleFunc("/like", internal.Likes)
-	mux.HandleFunc("/dislike", internal.Dislikes)
-	mux.HandleFunc("/filter", internal.Filter)
-	mux.HandleFunc("/comlike", internal.ComLikes)
-	mux.HandleFunc("/comdislike", internal.ComDislikes)
-	mux.HandleFunc("/filter/likes", internal.Likes)
+	mux.HandleFunc("/", web.Homepage)
+	mux.HandleFunc("/signup", web.SignUp)
+	mux.HandleFunc("/signin", web.SignIn)
+	mux.HandleFunc("/logout", web.Logout)
+	mux.HandleFunc("/signupconfirmation", web.SignUpConfirmation)
+	mux.HandleFunc("/signinconfirmation", web.SignInConfirmation)
+	mux.HandleFunc("/comments", web.PostPage)
+	mux.HandleFunc("/postconfirmation", web.PostConfirmation)
+	mux.HandleFunc("/commentconfirmation", web.CommentConfirmation)
+	mux.HandleFunc("/create", web.Create)
+	mux.HandleFunc("/like", web.Likes)
+	mux.HandleFunc("/dislike", web.Dislikes)
+	mux.HandleFunc("/filter", web.Filter)
+	mux.HandleFunc("/comlike", web.ComLikes)
+	mux.HandleFunc("/comdislike", web.ComDislikes)
+	mux.HandleFunc("/filter/likes", web.Likes)
 	fmt.Println("http://127.0.0.1:8000")
 	err := http.ListenAndServe(":8000", mux)
 	log.Fatal(err)
