@@ -18,8 +18,26 @@ func ConfirmSignup(Name string, Email string, Password string, RewrittenPassword
 	if len(Name) < 3 || len(Password) < 7 {
 		return false, "Name/Password doesn't have enough characters. Minimum for name is 3 and for password is 7."
 	}
+	r := []rune(Name)
+	for i := range r {
+		if !((r[i] >= 97 && r[i] <= 122) || (r[i] >= 65 && r[i] <= 90)) && i == 0 {
+			return false, "First letter should be a alphabetical character."
+		}
+		if r[i] == ' ' {
+			return false, "Can't have space character in the name."
+		}
+		if r[i] > 122 || r[i] < 33 {
+			return false, "Can only have ASCII characters for Username."
+		}
+	}
+	r = []rune(Password)
+	for i := range r {
+		if r[i] > 122 || r[i] < 33 {
+			return false, "Can only have ASCII characters for Password."
+		}
+	}
 	if isEmailValid(Email) == false {
-		return false, "Wrong format for Email"
+		return false, "Wrong format for Email."
 	}
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
@@ -48,9 +66,9 @@ func ConfirmSignup(Name string, Email string, Password string, RewrittenPassword
 		for rows.Next() {
 			rows.Scan(&name, &email)
 			if name == Name {
-				return false, "That name is already being used"
+				return false, "That name is already being used."
 			} else if Email == email {
-				return false, "That Email is already being used"
+				return false, "That Email is already being used."
 			}
 		}
 
@@ -75,12 +93,12 @@ func ConfirmSignin(Name string, Password string) (bool, string) {
 			if bcrypt.CompareHashAndPassword([]byte(password), []byte(Password)) == nil {
 				return true, "OK"
 			} else {
-				return false, "Nepravilnyi porol"
+				return false, "Wrong Password."
 			}
 		}
 	}
 
-	return false, "User does not exist"
+	return false, "User does not exist."
 }
 
 func isEmailValid(e string) bool {
