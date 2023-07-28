@@ -16,16 +16,16 @@
 * To run the app:
 ``` 
 cd forum
-``` 
+
 sqlite3 sql/database.db < sql/db.sql
-```
+
 go run .
 ```
 ### Usage with Docker
 * To build the image you need to write: 
 ``` 
 cd forum
-``` 
+
 docker build -t example .
 ```
 Afterwards, to run the container you need to write:
@@ -35,7 +35,7 @@ docker run -d -p 8000:8000 example
 After that just follow this link:
 ```
 http://localhost:8000
-```
+
 ### Contributors
 * @rzhampeis 
 * @aomirhan  
