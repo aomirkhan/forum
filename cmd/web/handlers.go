@@ -17,14 +17,11 @@ import (
 
 func Homepage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		ErrorHandler(w, http.StatusMethodNotAllowed)
 		return
 	}
 	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-
+		ErrorHandler(w, http.StatusNotFound)
 		return
 	}
 
@@ -44,22 +41,24 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 
 		tmpl, err := template.ParseFiles(files...)
 		if err != nil {
-			log.Println(err.Error())
+			ErrorHandler(w, http.StatusInternalServerError)
 			return
 		}
 		tmpl.Execute(w, internal.ShowPost())
 	} else if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	} else {
 		if time.Now().After(cookie.Expires) {
 			db, err := sql.Open("sqlite3", "./sql/database.db")
 			if err != nil {
-				log.Println(err.Error())
+				ErrorHandler(w, http.StatusInternalServerError)
 				return
 			}
 			tx, err := db.Begin()
 			if err != nil {
-				log.Fatal(err)
+				ErrorHandler(w, http.StatusInternalServerError)
+				return
 			}
 			db.Exec("Delete * from cookies where Id = ( ? )", cookie.Value)
 			tx.Commit()
@@ -76,7 +75,8 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 
 		Name, err := db.Query("SELECT lame FROM cookies WHERE Id = ( ? )", c)
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		defer Name.Close()
 		for Name.Next() {
@@ -89,7 +89,7 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 		}
 		tmpl, err := template.ParseFiles(files...)
 		if err != nil {
-			log.Println(err.Error())
+			ErrorHandler(w, http.StatusInternalServerError)
 			return
 		}
 		db.Close()
@@ -100,9 +100,7 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		ErrorHandler(w, http.StatusMethodNotAllowed)
 		return
 	}
 	tmpl, err := template.ParseFiles("./ui/html/signup.html")
@@ -115,9 +113,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 func SignUpConfirmation(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		ErrorHandler(w, http.StatusMethodNotAllowed)
 		return
 	}
 	name := r.FormValue("UserName")
@@ -131,11 +127,13 @@ func SignUpConfirmation(w http.ResponseWriter, r *http.Request) {
 
 		pwd, err := bcrypt.GenerateFromPassword([]byte(password), 1)
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		db, err := sql.Open("sqlite3", "./sql/database.db")
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		internal.AddUser(name, email, string(pwd), db)
 
@@ -143,7 +141,7 @@ func SignUpConfirmation(w http.ResponseWriter, r *http.Request) {
 	} else {
 		tmpl, err := template.ParseFiles("./ui/html/signup.html")
 		if err != nil {
-			log.Println(err.Error())
+			ErrorHandler(w, http.StatusInternalServerError)
 			return
 		}
 		tmpl.Execute(w, text)
@@ -152,14 +150,12 @@ func SignUpConfirmation(w http.ResponseWriter, r *http.Request) {
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		ErrorHandler(w, http.StatusMethodNotAllowed)
 		return
 	}
 	tmpl, err := template.ParseFiles("./ui/html/signin.html")
 	if err != nil {
-		log.Println(err.Error())
+		ErrorHandler(w, http.StatusInternalServerError)
 		return
 	}
 	tmpl.Execute(w, nil)
@@ -167,9 +163,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 
 func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		ErrorHandler(w, http.StatusMethodNotAllowed)
 		return
 	}
 	name := r.FormValue("UserName")
@@ -178,13 +172,14 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 	if result == true {
 		u1, err := uuid.NewV4()
 		if err != nil {
-			w.WriteHeader(http.StatusForbidden)
+			ErrorHandler(w, http.StatusForbidden)
 			return
 		}
 		u2 := uuid.NewV3(u1, name).String()
 		db, err := sql.Open("sqlite3", "./sql/database.db")
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		defer db.Close()
 		internal.CreateSession(u2, name, db)
@@ -195,7 +190,7 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 	} else {
 		tmpl, err := template.ParseFiles("./ui/html/signin.html")
 		if err != nil {
-			log.Println(err.Error())
+			ErrorHandler(w, http.StatusInternalServerError)
 			return
 		}
 		tmpl.Execute(w, text)
@@ -205,7 +200,8 @@ func SignInConfirmation(w http.ResponseWriter, r *http.Request) {
 func Logout(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	cookie, err := r.Cookie("logged-in")
 	internal.DeleteCookie(cookie.Value, db)
@@ -219,9 +215,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 func Create(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		ErrorHandler(w, http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -235,9 +229,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 func PostConfirmation(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		ErrorHandler(w, http.StatusMethodNotAllowed)
 		return
 	}
 	title := r.FormValue("title")
@@ -245,7 +237,8 @@ func PostConfirmation(w http.ResponseWriter, r *http.Request) {
 	cat := r.FormValue("cars")
 	cookie, err := r.Cookie("logged-in")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	internal.CreatePost(cookie.Value, text, cat, title)
 	http.Redirect(w, r, "/", 302)
@@ -253,28 +246,28 @@ func PostConfirmation(w http.ResponseWriter, r *http.Request) {
 
 func PostPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		ErrorHandler(w, http.StatusMethodNotAllowed)
 		return
 	}
 	xurl := strings.Split(r.URL.String(), "id=")
 	if len(xurl) < 2 {
-		w.WriteHeader(http.StatusNotFound)
+		ErrorHandler(w, http.StatusNotFound)
 		return
 	}
 
 	id, err := strconv.Atoi(xurl[1])
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		ErrorHandler(w, http.StatusNotFound)
 	}
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	qu, err := db.Query("select Title, Post,Namae from posts where Id=(?)", id)
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	defer qu.Close()
 	var title string
@@ -286,14 +279,15 @@ func PostPage(w http.ResponseWriter, r *http.Request) {
 
 	db.Close()
 	if r.URL.String() != "/comments?id="+strconv.Itoa(id) {
-		w.WriteHeader(http.StatusNotFound)
+		ErrorHandler(w, http.StatusNotFound)
 		return
 	}
 	db, err = sql.Open("sqlite3", "./sql/database.db")
 	defer db.Close()
 	count, err := db.Query("select count(*) from posts;")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	var i int
 	defer count.Close()
@@ -301,14 +295,14 @@ func PostPage(w http.ResponseWriter, r *http.Request) {
 		count.Scan(&i)
 	}
 	if id > i || id < 1 {
-		w.WriteHeader(http.StatusNotFound)
+		ErrorHandler(w, http.StatusNotFound)
 		return
 	}
 
 	tmp, err := template.ParseFiles("./ui/html/comments.html")
 	if err != nil {
 
-		w.WriteHeader(http.StatusInternalServerError)
+		ErrorHandler(w, http.StatusInternalServerError)
 		return
 	}
 	comments := internal.CollectComments(id, db)
@@ -345,12 +339,14 @@ func CommentConfirmation(w http.ResponseWriter, r *http.Request) {
 	}
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	cookie, err := r.Cookie("logged-in")
 	st, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	var name string
 	for st.Next() {
@@ -378,7 +374,8 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 
 	Name, err := db.Query("SELECT lame FROM cookies WHERE Id = ( ? )", cc)
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	defer Name.Close()
 	for Name.Next() {
@@ -459,13 +456,15 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 
 	db, err = sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 
 	rows, err := db.Query(text)
 	defer db.Close()
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	var title string
 	var t string
@@ -493,11 +492,13 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 
 		err := db.QueryRow("SELECT count(*) FROM likes WHERE Postid=(?)", i).Scan(&likes)
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		err = db.QueryRow("SELECT count(*) FROM dislikes WHERE Postid=(?)", i).Scan(&dislikes)
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		onepost := internal.Post{
 			Title:    title,
@@ -518,7 +519,8 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("G")
 		db, err := sql.Open("sqlite3", "./sql/database.db")
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		st, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
 		var name string
@@ -549,7 +551,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 
 		tmpl, err := template.ParseFiles(files...)
 		if err != nil {
-			log.Println(err.Error())
+			ErrorHandler(w, http.StatusInternalServerError)
 			return
 		}
 
@@ -560,7 +562,8 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("GG")
 		db, err := sql.Open("sqlite3", "./sql/database.db")
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		st, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
 		var name string
@@ -572,12 +575,14 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		st.Close()
 		db, err = sql.Open("sqlite3", "./sql/database.db")
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		var res1 []internal.Post
 		st1, err := db.Query("SELECT Title, Post,Namae,Category,Id FROM posts WHERE Namae=(?)", name)
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		var title string
 		var t string
@@ -592,11 +597,13 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 
 			err := db.QueryRow("SELECT count(*) FROM likes WHERE Postid=(?)", i).Scan(&likes)
 			if err != nil {
-				log.Fatal(err)
+				ErrorHandler(w, http.StatusInternalServerError)
+				return
 			}
 			err = db.QueryRow("SELECT count(*) FROM dislikes WHERE Postid=(?)", i).Scan(&dislikes)
 			if err != nil {
-				log.Fatal(err)
+				ErrorHandler(w, http.StatusInternalServerError)
+				return
 			}
 			onepost := internal.Post{
 				Title:    title,
@@ -627,7 +634,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		}
 		tmpl, err := template.ParseFiles(files...)
 		if err != nil {
-			log.Println(err.Error())
+			ErrorHandler(w, http.StatusInternalServerError)
 			return
 		}
 
@@ -650,7 +657,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		}
 		tmpl, err := template.ParseFiles(files...)
 		if err != nil {
-			log.Println(err.Error())
+			ErrorHandler(w, http.StatusInternalServerError)
 			return
 		}
 
@@ -660,20 +667,20 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 
 func Likes(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		ErrorHandler(w, http.StatusMethodNotAllowed)
 		return
 	}
 	id := r.FormValue("id")
 
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	cookie, err := r.Cookie("logged-in")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	var checkName string
 	row, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
@@ -683,7 +690,8 @@ func Likes(w http.ResponseWriter, r *http.Request) {
 	row.Close()
 	db, err = sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 
 	previousURL := r.Header.Get("Referer")
@@ -712,39 +720,45 @@ func Likes(w http.ResponseWriter, r *http.Request) {
 
 		tx, err := db.Begin()
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 
 		_, err = db.Exec("INSERT INTO likes (Name, Postid) VALUES (?, ?)", checkName, id)
 		_, err = db.Exec("DELETE FROM dislikes WHERE Name=(?) and Postid=(?)", checkName, id)
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		tx.Commit()
 		db.Close()
 	} else if checklikes == false && checkdislikes == false {
 		tx, err := db.Begin()
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 
 		_, err = db.Exec("INSERT INTO likes (Name, Postid) VALUES (?, ?)", checkName, id)
 
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		tx.Commit()
 		db.Close()
 	} else if checklikes == true && checkdislikes == false {
 		tx, err := db.Begin()
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 
 		_, err = db.Exec("DELETE FROM likes WHERE Name=(?) and Postid=(?)", checkName, id)
 
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		tx.Commit()
 		db.Close()
@@ -755,20 +769,20 @@ func Likes(w http.ResponseWriter, r *http.Request) {
 
 func Dislikes(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		ErrorHandler(w, http.StatusMethodNotAllowed)
 		return
 	}
 	id := r.FormValue("id")
 
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	cookie, err := r.Cookie("logged-in")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	var checkName string
 	row, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
@@ -778,7 +792,8 @@ func Dislikes(w http.ResponseWriter, r *http.Request) {
 	row.Close()
 	db, err = sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 
 	previousURL := r.Header.Get("Referer")
@@ -807,39 +822,45 @@ func Dislikes(w http.ResponseWriter, r *http.Request) {
 
 		tx, err := db.Begin()
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 
 		_, err = db.Exec("INSERT INTO dislikes (Name, Postid) VALUES (?, ?)", checkName, id)
 		_, err = db.Exec("DELETE FROM likes WHERE Name=(?) and Postid = (?)", checkName, id)
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		tx.Commit()
 		db.Close()
 	} else if checklikes == false && checkdislikes == false {
 		tx, err := db.Begin()
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 
 		_, err = db.Exec("INSERT INTO dislikes (Name, Postid) VALUES (?, ?)", checkName, id)
 
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		tx.Commit()
 		db.Close()
 	} else if checklikes == false && checkdislikes == true {
 		tx, err := db.Begin()
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 
 		_, err = db.Exec("DELETE FROM dislikes WHERE Name=(?) and Postid=(?)", checkName, id)
 
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 		tx.Commit()
 		db.Close()
@@ -851,9 +872,7 @@ func Dislikes(w http.ResponseWriter, r *http.Request) {
 
 func ComLikes(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		ErrorHandler(w, http.StatusMethodNotAllowed)
 		return
 	}
 	previousURL := r.Header.Get("Referer")
@@ -862,11 +881,13 @@ func ComLikes(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	cookie, err := r.Cookie("logged-in")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	var checkName string
 	row, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
@@ -876,13 +897,15 @@ func ComLikes(w http.ResponseWriter, r *http.Request) {
 	row.Close()
 	db, err = sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	checklikes := false
 	checkdislikes := false
 	rows, err := db.Query("SELECT Name FROM comlikes WHERE (Comid,Id)=(?,?)", id, postid)
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	var likerName string
 	defer rows.Close()
@@ -894,7 +917,7 @@ func ComLikes(w http.ResponseWriter, r *http.Request) {
 	}
 	x, err := db.Query("SELECT Name FROM comdislikes WHERE (Comid,Id)=(?,?)", id, postid)
 	if err != nil {
-		fmt.Println("2")
+		ErrorHandler(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -909,7 +932,8 @@ func ComLikes(w http.ResponseWriter, r *http.Request) {
 	}
 	tx, err := db.Begin()
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	fmt.Println("GG", id)
 	if checklikes == false && checkdislikes == true {
@@ -917,7 +941,8 @@ func ComLikes(w http.ResponseWriter, r *http.Request) {
 		_, err = db.Exec("INSERT INTO comlikes (Name, Comid,Id) VALUES (?, ?, ?)", checkName, id, postid)
 		_, err = db.Exec("DELETE FROM comdislikes WHERE Name=(?) and Comid=(?) and Id=(?)", checkName, id, postid)
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 
 	} else if checklikes == false && checkdislikes == false {
@@ -925,7 +950,8 @@ func ComLikes(w http.ResponseWriter, r *http.Request) {
 		_, err = db.Exec("INSERT INTO comlikes (Name, Comid,Id) VALUES (?, ?, ?)", checkName, id, postid)
 
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 
 	} else if checklikes == true && checkdislikes == false {
@@ -933,7 +959,8 @@ func ComLikes(w http.ResponseWriter, r *http.Request) {
 		_, err = db.Exec("DELETE FROM comlikes WHERE Name=(?) and Comid=(?) and Id=(?)", checkName, id, postid)
 
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 	}
 	tx.Commit()
@@ -943,10 +970,7 @@ func ComLikes(w http.ResponseWriter, r *http.Request) {
 
 func ComDislikes(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		fmt.Println("WHY")
-		w.Header().Set("Allow", http.MethodPost)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
+		ErrorHandler(w, http.StatusMethodNotAllowed)
 		return
 	}
 	previousURL := r.Header.Get("Referer")
@@ -955,11 +979,13 @@ func ComDislikes(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	cookie, err := r.Cookie("logged-in")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	var checkName string
 	row, err := db.Query("SELECT lame FROM cookies WHERE Id=(?)", cookie.Value)
@@ -969,13 +995,15 @@ func ComDislikes(w http.ResponseWriter, r *http.Request) {
 	row.Close()
 	db, err = sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	checklikes := false
 	checkdislikes := false
 	rows, err := db.Query("SELECT Name FROM comlikes WHERE (Comid,Id)=(?,?)", id, postid)
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
 	var likerName string
 	defer rows.Close()
@@ -987,7 +1015,7 @@ func ComDislikes(w http.ResponseWriter, r *http.Request) {
 	}
 	x, err := db.Query("SELECT Name FROM comdislikes WHERE (Comid,Id)=(?,?)", id, postid)
 	if err != nil {
-		fmt.Println("2")
+		ErrorHandler(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -1002,36 +1030,58 @@ func ComDislikes(w http.ResponseWriter, r *http.Request) {
 	}
 	tx, err := db.Begin()
 	if err != nil {
-		log.Fatal(err)
+		ErrorHandler(w, http.StatusInternalServerError)
+		return
 	}
-	fmt.Println("GG", id)
+
 	if checklikes == true && checkdislikes == false {
 
 		_, err = db.Exec("INSERT INTO comdislikes (Name, Comid,Id) VALUES (?, ?, ?)", checkName, id, postid)
 		_, err = db.Exec("DELETE FROM comlikes WHERE Name=(?) and Comid=(?) and Id=(?)", checkName, id, postid)
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 
 	} else if checklikes == false && checkdislikes == false {
-		fmt.Println(1)
 
 		_, err = db.Exec("INSERT INTO comdislikes (Name, Comid,Id) VALUES (?, ?, ?)", checkName, id, postid)
 
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 
 	} else if checklikes == false && checkdislikes == true {
-		fmt.Println(2)
 
 		_, err = db.Exec("DELETE FROM comdislikes WHERE Name=(?) and Comid=(?) and Id=(?)", checkName, id, postid)
 
 		if err != nil {
-			log.Fatal(err)
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
 		}
 	}
 	tx.Commit()
 
 	http.Redirect(w, r, previousURL, 302)
+}
+
+func ErrorHandler(w http.ResponseWriter, status int) {
+	tmp, err := template.ParseFiles("./ui/html/error.html")
+	if err != nil || tmp == nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
+		return
+	}
+	var Err internal.ErrorStruct
+	Err.Message = http.StatusText(status)
+	Err.Status = status
+	err = tmp.Execute(w, Err)
+	if err != nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
+		return
+	}
 }

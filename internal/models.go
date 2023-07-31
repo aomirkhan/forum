@@ -25,3 +25,8 @@ type Postpage struct {
 	Name     string
 	Comments []Comment
 }
+
+type ErrorStruct struct {
+	Status  int
+	Message string
+}
