@@ -235,13 +235,23 @@ func PostConfirmation(w http.ResponseWriter, r *http.Request) {
 	title := r.FormValue("title")
 	text := r.FormValue("convert")
 	cat := r.FormValue("cars")
-	cookie, err := r.Cookie("logged-in")
-	if err != nil {
-		ErrorHandler(w, http.StatusInternalServerError)
-		return
+	checker, t := internal.PostChecker(title, text)
+	if checker == false {
+		tmpl, err := template.ParseFiles("./ui/html/create.html")
+		if err != nil {
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
+		}
+		tmpl.Execute(w, t)
+	} else {
+		cookie, err := r.Cookie("logged-in")
+		if err != nil {
+			ErrorHandler(w, http.StatusInternalServerError)
+			return
+		}
+		internal.CreatePost(cookie.Value, text, cat, title)
+		http.Redirect(w, r, "/", 302)
 	}
-	internal.CreatePost(cookie.Value, text, cat, title)
-	http.Redirect(w, r, "/", 302)
 }
 
 func PostPage(w http.ResponseWriter, r *http.Request) {
@@ -258,6 +268,7 @@ func PostPage(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(xurl[1])
 	if err != nil {
 		ErrorHandler(w, http.StatusNotFound)
+		return
 	}
 	db, err := sql.Open("sqlite3", "./sql/database.db")
 	if err != nil {
