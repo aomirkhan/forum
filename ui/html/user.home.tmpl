@@ -39,21 +39,24 @@
         <div class="box" >
         
             <h2> {{.Title}} </h2>
-            <p2> {{.Name}} </p2>
+            <p2> Author: {{.Name}} </p2>
           <p2>{{.Text}}</p2>
-            <p2>{{.Category}}</p2>
+            <div class="cat">
+            <p1>Category:<p1>
+            <p5>{{.Category}}</p2>
+            </div>
                <a href="/comments?id={{.Id}}">View Comments</a>
                 
                  <form action="/like" method="post">
                 <input type="hidden" name="id" value={{.Id}}>
                 <button type="submit">Like</button>
                 </form>
-                <p2>{{.Likes}}</p2>
+                <p2 class="likes">{{.Likes}}</p2>
                   <form action="/dislike" method="post">
                 <input type="hidden" name="id" value={{.Id}}>
                 <button type="submit">Dislike</button>
                 </form>
-                 <p2>{{.Dislikes}}</p2>
+                 <p2 class="dislikes">{{.Dislikes}}</p2>
         </div>
         
         <br>

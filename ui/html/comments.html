@@ -1,44 +1,51 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="./templates/css/style.css">
+        <title>Create</title>
+        
+    </head>
 <head>
     <title>Post Page</title>
 </head>
 <body>
-    <h1>{{.Title}}</h1>
-    <br>
-    <p1>{{.Name}}</p1>
-    <br>
-    <p1>{{.Post}}</p1>
-    <br>
-    <h3>Add a Comment</h3>
-    <form action="/commentconfirmation" method="post">
-       
-
+    <div class="container4">
+      <h1>{{.Title}}</h1>
+      <br>
+      <p class="author">{{.Name}}</p>
+      <br>
+      <div class="Rizalox">
+      <p class="post">{{.Post}}</p>
+    </div>
+      <br>
+      <h3>Add a Comment</h3>
+      <form action="/commentconfirmation" method="post">
         <label for="comment">Comment:</label>
         <textarea id="comment" name="comment" rows="4" cols="50" required></textarea>
-
         <button type="submit">Submit Comment</button>
-    </form>
-    {{range .Comments}}
-        <div class="commentline" > 
-           
-        
-            <h2> {{.Name}} </h2>
-            <p1>{{.Text}}</p2>
-                <form action="/comlike" method="post">
-                    <input type="hidden" name="id" value={{.Comid}}>
-                    <button type="submit">Like</button>
-                    </form>
-                    <p2>{{.Likes}}</p2>
-                      <form action="/comdislike" method="post">
-                    <input type="hidden" name="id" value={{.Comid}}>
-                    <button type="submit">Dislike</button>
-                    </form>
-                     <p2>{{.Dislikes}}</p2>
-               
-
+      </form>
+      {{range .Comments}}
+        <div class="commentline">
+          <h2>{{.Name}}</h2>
+          <p class="comment-text">{{.Text}}</p>
+          <div class="comment-actions">
+            <form action="/comlike" method="post">
+              <input type="hidden" name="id" value={{.Comid}}>
+              <button type="submit">Like</button>
+            </form>
+            <p class="likes">{{.Likes}}</p>
+            <form action="/comdislike" method="post">
+              <input type="hidden" name="id" value={{.Comid}}>
+              <button type="submit">Dislike</button>
+            </form>
+            <p class="dislikes">{{.Dislikes}}</p>
+          </div>
         </div>
         <br>
-       {{end}}
-</body>
+      {{end}}
+    </div>
+  </body>
 </html>

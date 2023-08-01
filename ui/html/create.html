@@ -9,31 +9,32 @@
     
 </head>
 <body>
-    <p>Create Post</p>
-<br>
-<p>{{.}}</p>
-<br>
-<form action="/postconfirmation" method="post">
-    <div class="button-row">
-         <p1>Title</p1>
-        <textarea  wrap="off" id="range2" name="title" ></textarea>
-        <br>
-        <p1>Post</p1>
-        <textarea  wrap="off" id="range2" name="convert" ></textarea>
-        <br>
-        <p1>Post</p1>
-         <br>        
-         <select name="cars" id="cars">
-            <option value="volvo">Volvo</option>
-            <option value="saab">Saab</option>
-            <option value="mercedes">Mercedes</option>
-            <option value="audi">Audi</option>
-          </select>
-<br>     
-        <button type="submit">Post</button>
-
+    <div class="container3">
+      <div class="login-box">
+        <h1>Create Post</h1>
+        <p1>{{.}}</p1>  
+        <form action="/postconfirmation" method="post">
+          <div class="input-group">
+            <p>Title</p>
+            
+            <textarea wrap="soft" id="range2" name="title"></textarea>
+          </div>
+          <div class="input-group1">
+            <p>Post</p>
+            <textarea wrap="soft" id="range2" name="convert"></textarea>
+          </div>
+          <div class="input-group">
+            <p>Category</p>
+            <select name="cars" id="cars">
+              <option value="volvo">Volvo</option>
+              <option value="saab">Saab</option>
+              <option value="mercedes">Mercedes</option>
+              <option value="audi">Audi</option>
+            </select>
+          </div>
+          <button type="submit">Post</button>
+        </form>
+      </div>
     </div>
-</form>
-
-</body>
+  </body>
 </html>
